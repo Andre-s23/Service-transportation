@@ -1,0 +1,35 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+from app.config import settings
+from app.database import engine, Base
+from app.routers import auth, admin, transports, reports
+
+# Создание таблиц при запуске (для курсовой допустимо)
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="Система учета автоперевозок", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"], # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    https_only=False,
+    same_site="lax"
+)
+
+app.include_router(auth.router)
+app.include_router(admin.router)
+app.include_router(transports.router)
+app.include_router(reports.router)
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok"}
