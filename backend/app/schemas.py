@@ -3,7 +3,11 @@ from typing import Optional, List
 from datetime import date
 from app.models import RoleEnum
 
-class UserCreate(BaseModel):
+
+class LoginRequest(BaseModel):
+    login: str
+    password: str
+class UserCreate(BaseModel):  # пользователь
     login: str
     password: str
     full_name: str
@@ -21,11 +25,164 @@ class UserResponse(BaseModel):
     full_name: str
     role: RoleEnum
 
-class TransportationCreate(BaseModel):
+
+class WarehouseBase(BaseModel):   # склад
+    name: str
+    region: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    manager_name: Optional[str] = None
+
+class WarehouseCreate(WarehouseBase): pass
+class WarehouseUpdate(WarehouseBase): pass
+class WarehouseResponse(WarehouseBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+class DetailBase(BaseModel):      # деталь
+    name: str
+    base_price: Optional[float] = None
+    min_stock: Optional[int] = None
+    is_fragile: Optional[bool] = False
+    warehouse_id: int
+
+class DetailCreate(DetailBase): pass
+class DetailUpdate(BaseModel):
+    name: Optional[str] = None
+    base_price: Optional[float] = None
+    min_stock: Optional[int] = None
+    is_fragile: Optional[bool] = None
+    warehouse_id: Optional[int] = None
+
+class DetailResponse(DetailBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    warehouse_name: Optional[str] = None
+
+
+
+class PlantBase(BaseModel):    # деталь
+    name: str
+    region: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    manager_name: Optional[str] = None
+    workshop_count: Optional[int] = None
+
+class PlantCreate(PlantBase): pass
+class PlantUpdate(PlantBase): pass
+class PlantResponse(PlantBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+class VehicleBase(BaseModel):       # автомобиль
+    brand: Optional[str] = None
+    license_plate: str
+    tonnage: Optional[float] = None
+    release_date: Optional[date] = None
+    is_serviceable: Optional[bool] = True
+
+class VehicleCreate(VehicleBase): pass
+class VehicleUpdate(BaseModel):
+    brand: Optional[str] = None
+    tonnage: Optional[float] = None
+    release_date: Optional[date] = None
+    is_serviceable: Optional[bool] = None
+
+class VehicleResponse(VehicleBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+class TrailerBase(BaseModel):    # прицеп
+    brand: Optional[str] = None
+    license_plate: str
+    tonnage: Optional[float] = None
+    release_date: Optional[date] = None
+    volume: Optional[float] = None
+    is_serviceable: Optional[bool] = True
+
+class TrailerCreate(TrailerBase): pass
+class TrailerUpdate(BaseModel):
+    brand: Optional[str] = None
+    tonnage: Optional[float] = None
+    release_date: Optional[date] = None
+    volume: Optional[float] = None
+    is_serviceable: Optional[bool] = None
+
+class TrailerResponse(TrailerBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+
+class EmployeeBase(BaseModel): # сотрудник
+    full_name: str
+    login: str
+    role: RoleEnum
+    phone: Optional[str] = None
+    birth_date: Optional[date] = None
+    hire_date: Optional[date] = None
+
+class DriverProfileResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    license_number: str
+    driving_experience: int
+
+class EmployeeCreate(EmployeeBase):
+    password: str
+    license_number: Optional[str] = None
+    driving_experience: Optional[int] = None
+
+class EmployeeUpdate(BaseModel):
+    full_name: Optional[str] = None
+    role: Optional[RoleEnum] = None
+    phone: Optional[str] = None
+    birth_date: Optional[date] = None
+    hire_date: Optional[date] = None
+    license_number: Optional[str] = None
+    driving_experience: Optional[int] = None
+
+class EmployeeResponse(EmployeeBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    is_driver: bool = False
+    driver_profile: Optional[DriverProfileResponse] = None
+
+
+
+class TransportDetailItem(BaseModel):  # транспортировка
+    detail_id: int
+    quantity: int
+    shipping_cost: Optional[float] = None
+
+class TransportationBase(BaseModel):
     assign_date: date
     completion_date: Optional[date] = None
     plant_id: int
     vehicle_id: int
     trailer_id: Optional[int] = None
     driver_id: int
-    details: List[dict] = Field(..., examples=[{"detail_id": 1, "quantity": 10, "shipping_cost": 500.0}])
+
+class TransportationCreate(TransportationBase):
+    details: List[TransportDetailItem] = Field(default_factory=list)
+
+class TransportationUpdate(BaseModel):
+    assign_date: Optional[date] = None
+    completion_date: Optional[date] = None
+    plant_id: Optional[int] = None
+    vehicle_id: Optional[int] = None
+    trailer_id: Optional[int] = None
+    driver_id: Optional[int] = None
+
+class TransportationResponse(TransportationBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    plant_name: str
+    vehicle_plate: str
+    trailer_plate: Optional[str] = None
+    driver_name: str
+    total_items: int = 0
+    total_cost: float = 0.0

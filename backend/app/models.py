@@ -7,6 +7,9 @@ class RoleEnum(str, enum.Enum):
     client = "client"
     manager = "manager"
     admin = "admin"
+    driver = "driver"
+
+
 
 class Warehouse(Base):
     __tablename__ = "warehouses"

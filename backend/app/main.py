@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from app.config import settings
 from app.database import engine, Base
-from app.routers import auth, admin, transports, reports
+from app.routers import auth, admin, transports, reports, warehouses, details, plants, vehicles, trailers, employees
 
 # Создание таблиц при запуске (для курсовой допустимо)
 Base.metadata.create_all(bind=engine)
@@ -29,6 +29,14 @@ app.include_router(auth.router)
 app.include_router(admin.router)
 app.include_router(transports.router)
 app.include_router(reports.router)
+
+app.include_router(warehouses.router)
+app.include_router(details.router)
+app.include_router(plants.router)
+app.include_router(vehicles.router)
+app.include_router(trailers.router)
+app.include_router(employees.router)
+
 
 @app.get("/api/health")
 def health_check():

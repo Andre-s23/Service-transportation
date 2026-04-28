@@ -2,14 +2,15 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Employee
+from app.schemas import LoginRequest
 from app.dependencies import verify_password, get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация"])
 
 @router.post("/login")
-def login(login: str, password: str, request: Request, db: Session = Depends(get_db)):
-    user = db.query(Employee).filter(Employee.login == login).first()
-    if not user or not verify_password(password, user.password_hash):
+def login(data: LoginRequest, request: Request, db: Session = Depends(get_db)):
+    user = db.query(Employee).filter(Employee.login == data.login).first()
+    if not user or not verify_password(data.password, user.password_hash):
         raise Exception("Неверный логин или пароль")
     request.session["user_id"] = user.id
     return {"status": "ok", "role": user.role}
