@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Employee, Driver, RoleEnum as ModelRoleEnum
 from app.schemas import EmployeeCreate, EmployeeUpdate, EmployeeResponse
-from app.dependencies import require_role, get_password_hash, Employee as CurrentEmployee
+from app.dependencies import require_role, verify_password, get_password_hash, get_current_user, Employee as CurrentEmployee
 
 
 
@@ -66,9 +66,22 @@ def create_employee(emp: EmployeeCreate, db: Session = Depends(get_db),
 
 @router.put("/{eid}", response_model=EmployeeResponse)
 def update_employee(eid: int, emp: EmployeeUpdate, db: Session = Depends(get_db),
-                    _: CurrentEmployee = Depends(require_role(ModelRoleEnum.admin))):
+                    current_user: CurrentEmployee = Depends(get_current_user)):
     obj = db.query(Employee).filter(Employee.id == eid).first()
     if not obj: raise HTTPException(404, "Сотрудник не найден")
+    if current_user.role != ModelRoleEnum.admin and current_user.id != obj.id:
+        raise HTTPException(403, "Нет прав для редактирования чужого профиля")
+
+    update_data = emp.model_dump(exclude_unset=True)
+    if "new_password" in update_data:
+        if not update_data.get("old_password"):
+            raise HTTPException(400, "Необходимо указать текущий пароль")
+        if not verify_password(update_data["old_password"], obj.password_hash):
+            raise HTTPException(401, "Неверный текущий пароль")
+
+        obj.password_hash = get_password_hash(update_data["new_password"])
+        update_data.pop("new_password", None)
+        update_data.pop("old_password", None)
 
     for k, v in emp.model_dump(exclude_unset=True).items():
         if k == "license_number" and obj.driver_profile:

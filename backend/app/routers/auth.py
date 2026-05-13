@@ -22,4 +22,12 @@ def logout(request: Request, user: Employee = Depends(get_current_user)):
 
 @router.get("/me")
 def get_me(user: Employee = Depends(get_current_user)):
-    return {"id": user.id, "login": user.login, "full_name": user.full_name, "role": user.role}
+    return {
+        "id": user.id,
+        "login": user.login,
+        "full_name": user.full_name,
+        "role": user.role,
+        "phone": user.phone,
+        "birth_date": user.birth_date,
+        "hire_date": user.hire_date,
+    }

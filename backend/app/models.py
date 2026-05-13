@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, Date, ForeignKey, Enum as SAEnum
+from sqlalchemy import Column, Integer, String, Float, Boolean, Date, ForeignKey, Enum as SAEnum, text
 from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
@@ -31,6 +31,7 @@ class Detail(Base):
     warehouse_id = Column(Integer, ForeignKey("warehouses.id"))
     warehouse = relationship("Warehouse", back_populates="details")
     transport_links = relationship("TransportationDetail", back_populates="detail")
+    current_stock = Column(Integer, nullable=False, server_default=text("0"), default=0)
 
 class Plant(Base):
     __tablename__ = "plants"

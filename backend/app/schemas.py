@@ -45,6 +45,7 @@ class DetailBase(BaseModel):      # деталь
     min_stock: Optional[int] = None
     is_fragile: Optional[bool] = False
     warehouse_id: int
+    current_stock: int
 
 class DetailCreate(DetailBase): pass
 class DetailUpdate(BaseModel):
@@ -53,11 +54,13 @@ class DetailUpdate(BaseModel):
     min_stock: Optional[int] = None
     is_fragile: Optional[bool] = None
     warehouse_id: Optional[int] = None
+    current_stock: int
 
 class DetailResponse(DetailBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
     warehouse_name: Optional[str] = None
+    current_stock: int
 
 
 
@@ -125,6 +128,7 @@ class EmployeeBase(BaseModel): # сотрудник
     birth_date: Optional[date] = None
     hire_date: Optional[date] = None
 
+
 class DriverProfileResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
@@ -144,6 +148,8 @@ class EmployeeUpdate(BaseModel):
     hire_date: Optional[date] = None
     license_number: Optional[str] = None
     driving_experience: Optional[int] = None
+    old_password: Optional[str] = None
+    new_password: Optional[str] = None
 
 class EmployeeResponse(EmployeeBase):
     model_config = ConfigDict(from_attributes=True)
@@ -153,10 +159,18 @@ class EmployeeResponse(EmployeeBase):
 
 
 
-class TransportDetailItem(BaseModel):  # транспортировка
+class TransportDetailItemCreate(BaseModel):
     detail_id: int
     quantity: int
-    shipping_cost: Optional[float] = None
+    shipping_cost: float = 0
+class TransportDetailItem(BaseModel):  # транспортировка
+    model_config = ConfigDict(from_attributes=True)
+    detail_id: int
+    detail_name: str
+    base_price: float
+    quantity: int
+    shipping_cost: float
+    warehouse_name: Optional[str] = None
 
 class TransportationBase(BaseModel):
     assign_date: date
@@ -167,7 +181,8 @@ class TransportationBase(BaseModel):
     driver_id: int
 
 class TransportationCreate(TransportationBase):
-    details: List[TransportDetailItem] = Field(default_factory=list)
+    details: List[TransportDetailItemCreate] = Field(default_factory=list)
+
 
 class TransportationUpdate(BaseModel):
     assign_date: Optional[date] = None
@@ -176,13 +191,27 @@ class TransportationUpdate(BaseModel):
     vehicle_id: Optional[int] = None
     trailer_id: Optional[int] = None
     driver_id: Optional[int] = None
-
+    details: Optional[List[TransportDetailItemCreate]] = None
 class TransportationResponse(TransportationBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    assign_date: date
+    completion_date: Optional[date] = None
+    plant_id: int
+    vehicle_id: int
+    trailer_id: Optional[int] = None
+    driver_id: int
+
+    # Denormalized fields
     plant_name: str
     vehicle_plate: str
     trailer_plate: Optional[str] = None
     driver_name: str
-    total_items: int = 0
-    total_cost: float = 0.0
+    total_items: int
+    total_cost: float
+
+    # 🔥 Обязательно добавьте эти поля:
+    details: List[TransportDetailItem] = []
+    warehouse_name: Optional[str] = None
+    warehouse_address: Optional[str] = None
+    warehouse_phone: Optional[str] = None

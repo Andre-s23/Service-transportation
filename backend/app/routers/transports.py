@@ -7,36 +7,58 @@ from app.dependencies import require_role, RoleEnum, Employee as CurrentEmployee
 
 router = APIRouter(prefix="/transports", tags=["Транспортировки"])
 
+
 @router.get("/")
 def list_transports(search: str = Query(""),
                     db: Session = Depends(get_db),
                     current_user: Employee = Depends(get_current_user)):
-    q = db.query(Transportation).options(joinedload(Transportation.plant),
-                                         joinedload(Transportation.vehicle),
+    # 🔥 Загружаем склад через цепочку: Transportation -> details -> detail -> warehouse
+    q = db.query(Transportation).options(
+        joinedload(Transportation.plant),
+        joinedload(Transportation.vehicle),
         joinedload(Transportation.trailer),
-                                         joinedload(Transportation.driver),
-        joinedload(Transportation.details).joinedload(TransportationDetail.detail))
+        joinedload(Transportation.driver),
+        joinedload(Transportation.details)
+        .joinedload(TransportationDetail.detail)
+        .joinedload(Detail.warehouse)
+    )
 
     if current_user.role == RoleEnum.driver:
         q = q.filter(Transportation.driver_id == current_user.id)
-    elif current_user.role == RoleEnum.client:
-        pass
 
-
-
-    if search: q = q.join(Transportation.vehicle).filter(Transportation.vehicle.license_plate.ilike(f"%{search}%"))
-
+    if search:
+        q = q.join(Vehicle).filter(Vehicle.license_plate.ilike(f"%{search}%"))
 
     result = []
     for t in q.all():
-        total_items = sum(td.quantity for td in t.details)
-        total_cost = sum(td.shipping_cost or 0 for td in t.details)
+        details_list = []
+        for td in t.details:
+            wh = td.detail.warehouse
+            details_list.append({
+                "detail_id": td.detail.id,
+                "detail_name": td.detail.name,
+                "base_price": td.detail.base_price,
+                "quantity": td.quantity,
+                "shipping_cost": td.shipping_cost or 0,
+                "warehouse_name": wh.name if wh else None
+            })
+
+        # Если нужен склад на уровне рейса (берём из первой детали)
+        first_wh = details_list[0]["warehouse_name"] if details_list else None
+
+        total_items = sum(d["quantity"] for d in details_list)
+        total_cost = sum(d["shipping_cost"] for d in details_list)
+
         result.append(TransportationResponse(
             id=t.id, assign_date=t.assign_date, completion_date=t.completion_date,
             plant_id=t.plant_id, vehicle_id=t.vehicle_id, trailer_id=t.trailer_id, driver_id=t.driver_id,
             plant_name=t.plant.name, vehicle_plate=t.vehicle.license_plate,
             trailer_plate=t.trailer.license_plate if t.trailer else None,
-            driver_name=t.driver.full_name, total_items=total_items, total_cost=total_cost
+            driver_name=t.driver.full_name, total_items=total_items, total_cost=total_cost,
+            details=details_list,
+            warehouse_name=first_wh,  # ← Заполняем из детали
+            warehouse_address=None,  # ← Добавьте адрес/телефон в схему Detail/Warehouse если нужно
+            warehouse_phone=None
         ))
     return result
 
@@ -47,18 +69,39 @@ def get_transport(tid: int, db: Session = Depends(get_db),
     t = db.query(Transportation).options(
         joinedload(Transportation.plant), joinedload(Transportation.vehicle),
         joinedload(Transportation.trailer), joinedload(Transportation.driver),
-        joinedload(Transportation.details).joinedload(TransportationDetail.detail)
+        joinedload(Transportation.details)
+        .joinedload(TransportationDetail.detail)
+        .joinedload(Detail.warehouse)
     ).filter(Transportation.id == tid).first()
+
     if not t: raise HTTPException(404, "Транспортировка не найдена")
 
-    total_items = sum(td.quantity for td in t.details)
-    total_cost = sum(td.shipping_cost or 0 for td in t.details)
+    details_list = []
+    for td in t.details:
+        wh = td.detail.warehouse
+        details_list.append({
+            "detail_id": td.detail.id,
+            "detail_name": td.detail.name,
+            "base_price": td.detail.base_price,
+            "quantity": td.quantity,
+            "shipping_cost": td.shipping_cost or 0,
+            "warehouse_name": wh.name if wh else None
+        })
+
+    first_wh = details_list[0]["warehouse_name"] if details_list else None
+    total_items = sum(d["quantity"] for d in details_list)
+    total_cost = sum(d["shipping_cost"] for d in details_list)
+
     return TransportationResponse(
         id=t.id, assign_date=t.assign_date, completion_date=t.completion_date,
         plant_id=t.plant_id, vehicle_id=t.vehicle_id, trailer_id=t.trailer_id, driver_id=t.driver_id,
         plant_name=t.plant.name, vehicle_plate=t.vehicle.license_plate,
         trailer_plate=t.trailer.license_plate if t.trailer else None,
-        driver_name=t.driver.full_name, total_items=total_items, total_cost=total_cost
+        driver_name=t.driver.full_name, total_items=total_items, total_cost=total_cost,
+        details=details_list,
+        warehouse_name=first_wh,
+        warehouse_address=None,
+        warehouse_phone=None
     )
 
 
@@ -86,8 +129,6 @@ def create_transport(transport: TransportationCreate, db: Session = Depends(get_
     if transport.trailer_id and not db.query(Trailer).filter(Trailer.id == transport.trailer_id).first():
         raise HTTPException(404, "Прицеп не найден")
 
-
-
     new_t = Transportation(
         assign_date=transport.assign_date, completion_date=transport.completion_date,
         plant_id=transport.plant_id, vehicle_id=transport.vehicle_id,
@@ -113,14 +154,38 @@ def create_transport(transport: TransportationCreate, db: Session = Depends(get_
 def update_transport(tid: int, transport: TransportationUpdate, db: Session = Depends(get_db),
                      _: CurrentEmployee = Depends(require_role(RoleEnum.admin, RoleEnum.manager))):
     obj = db.query(Transportation).filter(Transportation.id == tid).first()
-    if not obj: raise HTTPException(404, "Транспортировка не найдена")
+    if not obj:
+        raise HTTPException(404, "Транспортировка не найдена")
 
-    for k, v in transport.model_dump(exclude_unset=True).items():
-        setattr(obj, k, v)
+    update_data = transport.model_dump(exclude_unset=True)
 
-    db.commit();
+        # 🔥 1. Обновляем ПРОСТЫЕ поля (исключаем details, т.к. это связь)
+    for k, v in update_data.items():
+        if k != "details":  # 🔥 Пропускаем details здесь
+            setattr(obj, k, v)
+    if "details" in update_data and transport.details is not None:
+        # Удаляем старые записи из связующей таблицы
+        db.query(TransportationDetail).filter(
+            TransportationDetail.transportation_id == obj.id
+        ).delete()
+
+        # Добавляем новые
+        for item in transport.details:
+            # Проверка существования детали
+            if not db.query(Detail).filter(Detail.id == item.detail_id).first():
+                raise HTTPException(404, f"Деталь {item.detail_id} не найдена")
+
+            db.add(TransportationDetail(
+                transportation_id=obj.id,
+                detail_id=item.detail_id,
+                quantity=item.quantity,
+                shipping_cost=item.shipping_cost
+            ))
+
+    db.commit()
     db.refresh(obj)
     return get_transport(obj.id, db, _)
+
 
 
 @router.delete("/{tid}")
@@ -128,6 +193,10 @@ def delete_transport(tid: int, db: Session = Depends(get_db),
                      _: CurrentEmployee = Depends(require_role(RoleEnum.admin))):
     obj = db.query(Transportation).filter(Transportation.id == tid).first()
     if not obj: raise HTTPException(404, "Транспортировка не найдена")
+    db.query(TransportationDetail).filter(
+        TransportationDetail.transportation_id == tid
+    ).delete()
+
     db.delete(obj);
     db.commit()
     return {"message": "Удалено"}

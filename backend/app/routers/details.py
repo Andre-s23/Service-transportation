@@ -18,7 +18,8 @@ def list_details(search: str = Query(""), warehouse_id: int = Query(None), db: S
     for d in q.all():
         result.append(DetailResponse(
             id=d.id, name=d.name, base_price=d.base_price, min_stock=d.min_stock,
-            is_fragile=d.is_fragile, warehouse_id=d.warehouse_id, warehouse_name=d.warehouse.name
+            is_fragile=d.is_fragile, warehouse_id=d.warehouse_id, warehouse_name=d.warehouse.name,
+            current_stock=d.current_stock
         ))
     return result
 
