@@ -97,7 +97,7 @@ export default function Warehouses() {
             placeholder="Поиск по названию или региону..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ maxWidth: '300px' }}
+            style={{ maxWidth: '240px' }}
           />
           {isAdmin && (
             <button className="btn btn-primary" onClick={handleOpenAdd}>

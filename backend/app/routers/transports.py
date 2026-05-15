@@ -4,6 +4,57 @@ from app.database import get_db
 from app.models import Transportation, TransportationDetail, Employee, Detail, Plant, Vehicle, Trailer
 from app.schemas import TransportationCreate, TransportationUpdate, TransportationResponse
 from app.dependencies import require_role, RoleEnum, Employee as CurrentEmployee, get_current_user
+from datetime import date
+from typing import Optional
+
+def check_vehicle_driver_conflict(db: Session, vehicle_id: int, driver_id: int,
+                                  assign_date: date, completion_date: Optional[date],
+                                  exclude_transport_id: Optional[int] = None) -> Optional[str]:
+    """
+    Проверяет пересечение дат для автомобиля и водителя.
+    Возвращает строку с ошибкой или None, если всё ок.
+    """
+    # Если дата завершения не указана — считаем рейс "бессрочным" или на 1 день
+    end_date = completion_date or assign_date
+
+    # Базовый запрос: ищем рейсы с тем же авто ИЛИ тем же водителем
+    q = db.query(Transportation).filter(
+        ((Transportation.vehicle_id == vehicle_id) |
+         (Transportation.driver_id == driver_id)),
+        # Исключаем текущую запись при редактировании
+        (Transportation.id != exclude_transport_id) if exclude_transport_id else True,
+        # Проверка пересечения дат:
+        # Новый рейс пересекается со старым, если:
+        # новый_старт <= старый_конец AND новый_конец >= старый_старт
+        Transportation.assign_date <= end_date,
+        (Transportation.completion_date >= assign_date) | (Transportation.completion_date == None)
+    )
+
+    conflict = q.first()
+    if conflict:
+        if conflict.vehicle_id == vehicle_id and conflict.driver_id == driver_id:
+            return f"Автомобиль и водитель уже заняты в рейсе"
+        elif conflict.vehicle_id == vehicle_id:
+            return f"Автомобиль уже занят в рейсе"
+        else:
+            return f"Водитель уже занят в рейсе"
+
+    return None
+
+
+def check_detail_min_quantity(db: Session, details_list) -> Optional[str]:
+    for item in details_list:
+        detail = db.query(Detail).filter(Detail.id == item.detail_id).first()
+        if not detail:
+            return f"Деталь ID {item.detail_id} не найдена в справочнике"
+        if detail.current_stock-detail.min_stock <= 0:
+            return f"Деталь «{detail.name}»: запасы меньше минимального остатка"
+        if item.quantity > detail.current_stock-detail.min_stock:
+            return f"Деталь «{detail.name}»: недостаточное количество на складе"
+    return None
+
+
+
 
 router = APIRouter(prefix="/transports", tags=["Транспортировки"])
 
@@ -129,6 +180,18 @@ def create_transport(transport: TransportationCreate, db: Session = Depends(get_
     if transport.trailer_id and not db.query(Trailer).filter(Trailer.id == transport.trailer_id).first():
         raise HTTPException(404, "Прицеп не найден")
 
+    conflict = check_vehicle_driver_conflict(
+        db, transport.vehicle_id, transport.driver_id,
+        transport.assign_date, transport.completion_date
+    )
+    if conflict:
+        raise HTTPException(409, conflict)  # 409 = Conflict
+
+    stock_error = check_detail_min_quantity(db, transport.details)
+    if stock_error:
+        raise HTTPException(400, stock_error)
+
+
     new_t = Transportation(
         assign_date=transport.assign_date, completion_date=transport.completion_date,
         plant_id=transport.plant_id, vehicle_id=transport.vehicle_id,
@@ -158,13 +221,30 @@ def update_transport(tid: int, transport: TransportationUpdate, db: Session = De
         raise HTTPException(404, "Транспортировка не найдена")
 
     update_data = transport.model_dump(exclude_unset=True)
+    update_data = transport.model_dump(exclude_unset=True)
+    if any(k in update_data for k in ["vehicle_id", "driver_id", "assign_date", "completion_date"]):
+        conflict = check_vehicle_driver_conflict(
+            db=db,
+            vehicle_id=getattr(transport, "vehicle_id", obj.vehicle_id),
+            driver_id=getattr(transport, "driver_id", obj.driver_id),
+            assign_date=getattr(transport, "assign_date", obj.assign_date),
+            completion_date=getattr(transport, "completion_date", obj.completion_date),
+            exclude_transport_id=tid  # 🔥 Исключаем саму себя из проверки!
+        )
+        if conflict:
+            raise HTTPException(409, conflict)
 
         # 🔥 1. Обновляем ПРОСТЫЕ поля (исключаем details, т.к. это связь)
     for k, v in update_data.items():
         if k != "details":  # 🔥 Пропускаем details здесь
             setattr(obj, k, v)
     if "details" in update_data and transport.details is not None:
+
+        stock_error = check_detail_min_quantity(db, transport.details)
+        if stock_error:
+            raise HTTPException(400, stock_error)
         # Удаляем старые записи из связующей таблицы
+
         db.query(TransportationDetail).filter(
             TransportationDetail.transportation_id == obj.id
         ).delete()

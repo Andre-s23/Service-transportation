@@ -66,7 +66,7 @@ export default function Trailers() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Прицепы</h3>
         <div className="d-flex gap-2">
-          <input type="text" className="form-control" placeholder="Поиск по марке или госномеру..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: '300px' }} />
+          <input type="text" className="form-control" placeholder="Поиск по марке или госномеру..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: '240px' }} />
           {isAdmin && <button className="btn btn-primary" onClick={handleOpenAdd}>+ Добавить прицеп</button>}
         </div>
       </div>

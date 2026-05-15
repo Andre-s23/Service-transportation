@@ -49,24 +49,27 @@ export default function TransportList() {
       {/* Шапка */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Перевозки</h3>
-        {canEdit && (
-          <button className="btn btn-primary" onClick={() => navigate('/transports/new')}>
-            + Создать рейс
-          </button>
-        )}
-      </div>
+        <div className="d-flex gap-2">
 
-      {/* Поиск */}
-      <div className="mb-4">
         <input
           type="text"
           className="form-control"
           placeholder="Поиск по госномеру авто..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ maxWidth: '400px' }}
+          style={{ maxWidth: '240px' }}
         />
+
+        {canEdit && (
+          <button className="btn btn-primary" onClick={() => navigate('/transports/new')}>
+            + Создать рейс
+          </button>
+        )}
+        </div>
       </div>
+
+      {/* Поиск */}
+
 
       {/* Таблица */}
       <div className="card shadow-sm">
@@ -74,7 +77,7 @@ export default function TransportList() {
           <table className="table table-hover align-middle mb-0">
             <thead className="bg-light">
               <tr>
-                <th></th> {/* 🔥 Колонка для кнопки раскрытия */}
+                <th></th>
                 <th>Дата начала</th>
                 <th>Дата завершения</th>
                 <th>Завод</th>

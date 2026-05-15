@@ -161,6 +161,12 @@ export default function TransportForm() {
 
       setTimeout(() => navigate('/transports'), 1500);
     } catch (err) {
+        if (err.response?.status === 409){
+            setError(err.response?.data?.detail);
+            }
+        if (err.response?.status === 400){
+            setError(err.response?.data?.detail);
+            }
       setError(err.response?.data?.detail || 'Ошибка при сохранении');
       console.error(err);
     } finally {
