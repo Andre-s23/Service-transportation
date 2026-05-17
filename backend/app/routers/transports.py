@@ -116,7 +116,7 @@ def list_transports(search: str = Query(""),
 
 @router.get("/{tid}", response_model=TransportationResponse)
 def get_transport(tid: int, db: Session = Depends(get_db),
-                  _: CurrentEmployee = Depends(require_role(RoleEnum.admin, RoleEnum.manager, RoleEnum.client))):
+                  _: CurrentEmployee = Depends(require_role(RoleEnum.admin, RoleEnum.manager))):
     t = db.query(Transportation).options(
         joinedload(Transportation.plant), joinedload(Transportation.vehicle),
         joinedload(Transportation.trailer), joinedload(Transportation.driver),

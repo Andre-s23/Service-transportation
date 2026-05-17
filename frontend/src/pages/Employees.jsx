@@ -3,10 +3,12 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
 export default function Employees() {
-  const [items, setItems] = useState([]);
+  const [items1, setItems1] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [roleFilter, setRoleFilter] = useState('all');
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({});
@@ -18,7 +20,7 @@ export default function Employees() {
       setLoading(true);
       try {
         const res = await api.get('/employees/', { params: { search } });
-        setItems(res.data);
+        setItems1(res.data);
       } catch (err) {
         console.error('Ошибка загрузки сотрудников:', err);
       } finally {
@@ -28,11 +30,29 @@ export default function Employees() {
     fetch();
   }, [search]);
 
+  const items2 = [...items1].sort((a, b) => {
+    const nameA = a.full_name?.toLowerCase() || '';
+    const nameB = b.full_name?.toLowerCase() || '';
+    if (sortOrder === 'asc') {
+      return nameA.localeCompare(nameB, 'ru');
+    } else {
+      return nameB.localeCompare(nameA, 'ru');
+    }
+  });
+
+  const items = items2
+    .filter(item => {
+      if (roleFilter === 'all') return true;
+      return item.role === roleFilter;
+    })
+
+
+
   // Открытие формы
   const handleOpenAdd = () => {
     setFormData({
       full_name: '',
-      role: 'client',
+      role: 'manager',
       phone: '',
       birth_date: '',
       hire_date: new Date().toISOString().split('T')[0],
@@ -49,9 +69,13 @@ export default function Employees() {
     try {
       // 🔥 Автогенерация логина/пароля (чтобы не показывать их в UI)
       // В продакшене лучше генерировать на бэкенде, но для курсовой так проще
-      const tempLogin = formData.full_name.toLowerCase()
+
+      const now = new Date();
+      const suffix = `${now.getDate()}${now.getMonth() + 1}`;
+      const tempLogin = formData.full_name
+        .toLowerCase()
         .replace(/[^a-zа-яё0-9]/gi, '')
-        .slice(0, 10) || `user${Date.now().toString().slice(-4)}`;
+        .slice(0, 4) + suffix;
 
       const payload = {
         ...formData,
@@ -69,7 +93,7 @@ export default function Employees() {
       setShowModal(false);
       // Обновляем список
       const res = await api.get('/employees/', { params: { search } });
-      setItems(res.data);
+      setItems1(res.data);
     } catch (err) {
       alert('Ошибка: ' + (err.response?.data?.detail || err.message));
     } finally {
@@ -82,7 +106,7 @@ export default function Employees() {
     if (window.confirm('Удалить сотрудника? Это действие нельзя отменить.')) {
       try {
         await api.delete(`/employees/${id}`);
-        setItems(prev => prev.filter(i => i.id !== id));
+        setItems1(prev => prev.filter(i => i.id !== id));
       } catch (err) {
         alert('Не удалось удалить (возможно, сотрудник назначен на рейс).');
       }
@@ -90,9 +114,27 @@ export default function Employees() {
   };
 
   // Перевод ролей на русский
-  const getRoleLabel = (role) => {
-    const map = { admin: 'Администратор', manager: 'Менеджер', client: 'Заказчик', driver: 'Водитель' };
-    return map[role] || role;
+//   const getRoleLabel = (role) => {
+//     const map = { admin: 'Администратор', manager: 'Менеджер', client: 'Заказчик', driver: 'Водитель' };
+//     return map[role] || role;
+//   };
+
+
+//   const getRoleConfig = (role) => {
+//     const map = {
+//       admin:   { label: 'Администратор', badge: 'bg-danger', icon: '👑' },
+//       manager: { label: 'Менеджер',      badge: 'bg-primary', icon: '💼' },
+//       driver:  { label: 'Водитель',      badge: 'bg-success', icon: '🚛' },
+//       client:  { label: 'Заказчик',      badge: 'bg-secondary', icon: '👤' }
+//     };
+//     return map[role] || { label: role, badge: 'bg-light text-dark', icon: '' };
+//   };
+
+   const roleCounts = {
+    all: items1.length,
+    admin: items1.filter(i => i.role === 'admin').length,
+    manager: items1.filter(i => i.role === 'manager').length,
+    driver: items1.filter(i => i.role === 'driver').length,
   };
 
   return (
@@ -101,6 +143,33 @@ export default function Employees() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Сотрудники</h3>
         <div className="d-flex gap-2">
+
+
+            <select
+            className="form-select"
+            style={{ maxWidth: '108px' }}
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value)}
+          >
+            <option value="asc">А → Я</option>
+            <option value="desc">Я → А</option>
+          </select>
+
+
+            <select
+            className="form-select"
+            style={{ maxWidth: '200px' }}
+            value={roleFilter}
+            onChange={e => setRoleFilter(e.target.value)}
+          >
+            <option value="all"> Все роли ({roleCounts.all})</option>
+            <option value="admin"> Админы ({roleCounts.admin})</option>
+            <option value="manager">Менеджеры ({roleCounts.manager})</option>
+            <option value="driver">Водители ({roleCounts.driver})</option>
+          </select>
+
+
+
           <input type="text" className="form-control" placeholder="Поиск по ФИО..."
             value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: '300px' }} />
           <button className="btn btn-primary" onClick={handleOpenAdd}>Зарегистрировать</button>
@@ -155,7 +224,7 @@ export default function Employees() {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">➕ Регистрация сотрудника</h5>
+                <h5 className="modal-title">Регистрация сотрудника</h5>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
 
@@ -172,9 +241,8 @@ export default function Employees() {
                   <div className="mb-3">
                     <label className="form-label">Роль в системе *</label>
                     <select className="form-select" required
-                      value={formData.role || 'client'}
+                      value={formData.role || 'manager'}
                       onChange={e => setFormData({...formData, role: e.target.value})}>
-                      <option value="client">Заказчик</option>
                       <option value="manager">Менеджер</option>
                       <option value="driver">Водитель</option>
                       <option value="admin">Администратор</option>

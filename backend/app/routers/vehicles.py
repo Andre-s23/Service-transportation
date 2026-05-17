@@ -10,14 +10,14 @@ router = APIRouter(prefix="/vehicles", tags=["Автомобили"])
 
 
 @router.get("/", response_model=list[VehicleResponse])
-def list_vehicles(search: str = Query(""), serviceable_only: bool = Query(False), db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager, RoleEnum.client))):
+def list_vehicles(search: str = Query(""), serviceable_only: bool = Query(False), db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager))):
     q = db.query(Vehicle)
     if search: q = q.filter(Vehicle.brand.ilike(f"%{search}%") | Vehicle.license_plate.ilike(f"%{search}%"))
     if serviceable_only: q = q.filter(Vehicle.is_serviceable == True)
     return q.all()
 
 @router.get("/{vid}", response_model=VehicleResponse)
-def get_vehicle(vid: int, db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager, RoleEnum.client))):
+def get_vehicle(vid: int, db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager))):
     v = db.query(Vehicle).filter(Vehicle.id == vid).first()
     if not v: raise HTTPException(404, "Автомобиль не найден")
     return v

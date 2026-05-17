@@ -3,10 +3,11 @@ import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Warehouses() {
-  const [items, setItems] = useState([]);
+  const [items1, setItems1] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [sortOrder, setSortOrder] = useState('asc');
 
   // Состояния модального окна
   const [showModal, setShowModal] = useState(false);
@@ -20,7 +21,7 @@ export default function Warehouses() {
       setLoading(true);
       try {
         const res = await api.get('/warehouses/', { params: { search } });
-        setItems(res.data);
+        setItems1(res.data);
       } catch (err) {
         console.error('Ошибка загрузки складов:', err);
       } finally {
@@ -29,6 +30,17 @@ export default function Warehouses() {
     };
     fetchItems();
   }, [search]);
+
+
+  const items = [...items1].sort((a, b) => {
+    const nameA = a.name?.toLowerCase() || '';
+    const nameB = b.name?.toLowerCase() || '';
+    if (sortOrder === 'asc') {
+      return nameA.localeCompare(nameB, 'ru');
+    } else {
+      return nameB.localeCompare(nameA, 'ru');
+    }
+  });
 
   // Открытие формы "Добавить"
   const handleOpenAdd = () => {
@@ -63,7 +75,7 @@ export default function Warehouses() {
       setShowModal(false);
       // Обновляем список
       const res = await api.get('/warehouses/', { params: { search } });
-      setItems(res.data);
+      setItems1(res.data);
     } catch (err) {
       alert('Ошибка: ' + (err.response?.data?.detail || err.message));
     } finally {
@@ -76,7 +88,7 @@ export default function Warehouses() {
     if (window.confirm('Удалить склад?')) {
       try {
         await api.delete(`/warehouses/${id}`);
-        setItems(prev => prev.filter(i => i.id !== id));
+        setItems1(prev => prev.filter(i => i.id !== id));
       } catch (err) {
         alert('Не удалось удалить (возможно, склад используется).');
       }
@@ -91,6 +103,17 @@ export default function Warehouses() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Склады</h3>
         <div className="d-flex gap-2">
+
+            <select
+            className="form-select"
+            style={{ maxWidth: '108px' }}
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value)}
+          >
+            <option value="asc">А → Я</option>
+            <option value="desc">Я → А</option>
+          </select>
+
           <input
             type="text"
             className="form-control"
@@ -126,7 +149,7 @@ export default function Warehouses() {
                 <tr key={item.id}>
                   <td className="ps-4 fw-medium">{item.name}</td>
                   <td>{item.region}</td>
-                  <td><small className="text-muted">{item.address || '—'}</small></td>
+                  <td>{item.address || '—'}</td>
                   <td>{item.phone || '—'}</td>
                   <td>{item.manager_name || '—'}</td>
                   {isAdmin && (
@@ -153,7 +176,7 @@ export default function Warehouses() {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  {isEditing ? '✏️ Редактировать склад' : '➕ Новый склад'}
+                  {isEditing ? 'Редактировать склад' : 'Новый склад'}
                 </h5>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>

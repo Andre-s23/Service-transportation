@@ -92,7 +92,7 @@ export default function Layout() {
     }
 
     setShowProfileModal(false);
-    alert('✅ Профиль обновлен');
+    alert('Профиль обновлен');
 
   } catch (err) {
     // Показываем детальную ошибку от бэкенда
@@ -125,16 +125,19 @@ export default function Layout() {
         { label: 'Склады', path: '/warehouses' },
         { label: 'Авто', path: '/vehicles' },
         { label: 'Прицепы', path: '/trailers' },
-        { label: 'Отчёты', path: '/reports' }
+
       );
     }
 
     if (user?.role === 'admin') {
-      items.push({ label: 'Сотрудники', path: '/employees' });
+        items.push({ label: 'Отчёты', path: '/reports' });
+        items.push({ label: 'Сотрудники', path: '/employees' });
     }
 
     if (user?.role === 'driver') {
       items.push({ label: 'Мои рейсы', path: '/transports' });
+      items.push({ label: 'Заводы', path: '/plants' });
+      items.push({ label: 'Склады', path: '/warehouses' })
     }
 
     return items;

@@ -4,11 +4,12 @@ import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Details() {
-  const [items, setItems] = useState([]);
+  const [items1, setItems1] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [sortOrder, setSortOrder] = useState('asc');
 
   // Состояния модального окна
   const [showModal, setShowModal] = useState(false);
@@ -25,7 +26,7 @@ export default function Details() {
           api.get('/details/', { params: { search } }),
           api.get('/warehouses/') // Для выпадающего списка
         ]);
-        setItems(detailsRes.data);
+        setItems1(detailsRes.data);
         setWarehouses(warehousesRes.data);
       } catch (err) {
         console.error('Ошибка загрузки:', err);
@@ -35,6 +36,17 @@ export default function Details() {
     };
     fetchData();
   }, [search]);
+
+
+  const items = [...items1].sort((a, b) => {
+    const nameA = a.name?.toLowerCase() || '';
+    const nameB = b.name?.toLowerCase() || '';
+    if (sortOrder === 'asc') {
+      return nameA.localeCompare(nameB, 'ru');
+    } else {
+      return nameB.localeCompare(nameA, 'ru');
+    }
+  });
 
   // Открытие формы "Добавить"
   const handleOpenAdd = () => {
@@ -66,7 +78,7 @@ export default function Details() {
       setShowModal(false);
       // Обновляем список без полной перезагрузки
       const res = await api.get('/details/', { params: { search } });
-      setItems(res.data);
+      setItems1(res.data);
     } catch (err) {
       alert('Ошибка: ' + (err.response?.data?.detail || err.message));
     } finally {
@@ -78,7 +90,7 @@ export default function Details() {
     if (window.confirm('Удалить деталь? Это действие нельзя отменить.')) {
       try {
         await api.delete(`/details/${id}`);
-        setItems(prev => prev.filter(i => i.id !== id));
+        setItems1(prev => prev.filter(i => i.id !== id));
       } catch (err) {
         alert('Не удалось удалить (возможно, деталь используется в перевозках).');
       }
@@ -93,6 +105,18 @@ export default function Details() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Детали</h3>
         <div className="d-flex gap-2">
+
+          <select
+            className="form-select"
+            style={{ maxWidth: '108px' }}
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value)}
+          >
+            <option value="asc">А → Я</option>
+            <option value="desc">Я → А</option>
+          </select>
+
+
           <input type="text" className="form-control" placeholder="Поиск по названию..."
             value={search} onChange={e => setSearch(e.target.value)} style={{ width: '250px' }} />
           {isAdmin && <button className="btn btn-primary" onClick={handleOpenAdd}>+ Добавить деталь</button>}
@@ -142,7 +166,7 @@ export default function Details() {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">{isEditing ? '✏️ Редактировать деталь' : '➕ Новая деталь'}</h5>
+                <h5 className="modal-title">{isEditing ? 'Редактировать деталь' : 'Новая деталь'}</h5>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
 

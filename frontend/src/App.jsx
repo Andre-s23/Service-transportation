@@ -50,7 +50,7 @@ function App() {
               </PrivateRoute>
             } />
             <Route path="/reports" element={
-              <PrivateRoute allowedRoles={['admin', 'manager']}>
+              <PrivateRoute allowedRoles={['admin']}>
                 <Reports />
               </PrivateRoute>
             } />
@@ -70,14 +70,14 @@ function App() {
               </PrivateRoute>
             } />
             {/* Добавьте сюда другие роуты по аналогии */}
-            <Route path="/plants" element={<PrivateRoute allowedRoles={['admin', 'manager']}><Plants /></PrivateRoute>} />
+            <Route path="/plants" element={<PrivateRoute allowedRoles={['admin', 'manager', 'driver']}><Plants /></PrivateRoute>} />
             <Route path="/details" element={
               <PrivateRoute allowedRoles={['admin', 'manager']}>
                 <Details />
               </PrivateRoute>
             } />
             <Route path="/warehouses" element={
-              <PrivateRoute allowedRoles={['admin', 'manager']}>
+              <PrivateRoute allowedRoles={['admin', 'manager', 'driver']}>
                 <Warehouses />
               </PrivateRoute>
             } />

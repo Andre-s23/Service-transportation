@@ -4,7 +4,7 @@ from app.database import Base
 import enum
 
 class RoleEnum(str, enum.Enum):
-    client = "client"
+
     manager = "manager"
     admin = "admin"
     driver = "driver"
@@ -71,7 +71,7 @@ class Employee(Base):
     full_name = Column(String, nullable=False)
     login = Column(String, unique=True, nullable=False, index=True)
     password_hash = Column(String, nullable=False)
-    role = Column(SAEnum(RoleEnum), default=RoleEnum.client, nullable=False)
+    role = Column(SAEnum(RoleEnum), default=RoleEnum.manager, nullable=False)
     phone = Column(String)
     birth_date = Column(Date)
     hire_date = Column(Date)

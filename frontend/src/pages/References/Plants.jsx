@@ -3,10 +3,11 @@ import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Plants() {
-  const [items, setItems] = useState([]);
+  const [items1, setItems1] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [sortOrder, setSortOrder] = useState('asc');
 
   // 🔥 Состояния для модального окна (формы)
   const [showModal, setShowModal] = useState(false);
@@ -19,7 +20,7 @@ export default function Plants() {
     setLoading(true);
     try {
       const res = await api.get('/plants/', { params: { search } });
-      setItems(res.data);
+      setItems1(res.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -28,6 +29,19 @@ export default function Plants() {
   };
 
   useEffect(() => { fetchItems(); }, [search]);
+
+
+  const items = [...items1].sort((a, b) => {
+    const nameA = a.name?.toLowerCase() || '';
+    const nameB = b.name?.toLowerCase() || '';
+    if (sortOrder === 'asc') {
+      return nameA.localeCompare(nameB, 'ru');
+    } else {
+      return nameB.localeCompare(nameA, 'ru');
+    }
+  });
+
+
 
   // 🔥 Открытие формы "Добавить"
   const handleOpenAdd = () => {
@@ -71,7 +85,7 @@ export default function Plants() {
     if (window.confirm('Удалить завод?')) {
       try {
         await api.delete(`/plants/${id}`);
-        setItems(prev => prev.filter(i => i.id !== id));
+        setItems1(prev => prev.filter(i => i.id !== id));
       } catch (err) {
         alert('Не удалось удалить (возможно, есть связи).');
       }
@@ -87,6 +101,17 @@ export default function Plants() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Заводы</h3>
         <div className="d-flex gap-2">
+
+            <select
+            className="form-select"
+            style={{ maxWidth: '108px' }}
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value)}
+          >
+            <option value="asc">А → Я</option>
+            <option value="desc">Я → А</option>
+          </select>
+
           <input type="text" className="form-control" placeholder="Поиск по названию и региону..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '250px' }} />
           {isAdmin && <button className="btn btn-primary" onClick={handleOpenAdd}>+ Добавить завод</button>}
         </div>
@@ -111,7 +136,7 @@ export default function Plants() {
                 <tr key={item.id}>
                   <td className="ps-4 fw-medium">{item.name}</td>
                   <td>{item.region}</td>
-                  <td><small className="text-muted">{item.address || '—'}</small></td>
+                  <td>{item.address || '—'}</td>
                   <td>{item.phone || '—'}</td>
                   <td>{item.workshop_count || 0}</td>
                   {isAdmin && (
@@ -138,7 +163,7 @@ export default function Plants() {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  {isEditing ? '✏️ Редактировать завод' : '➕ Новый завод'}
+                  {isEditing ? 'Редактировать завод' : 'Новый завод'}
                 </h5>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>

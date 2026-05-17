@@ -9,13 +9,13 @@ from app.dependencies import require_role, RoleEnum, Employee
 router = APIRouter(prefix="/warehouses", tags=["Склады"])
 
 @router.get("/", response_model=list[WarehouseResponse])
-def list_warehouses(search: str = Query(""), db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager, RoleEnum.client))):
+def list_warehouses(search: str = Query(""), db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager, RoleEnum.driver))):
     q = db.query(Warehouse)
     if search: q = q.filter(Warehouse.name.ilike(f"%{search}%") | Warehouse.region.ilike(f"%{search}%"))
     return q.all()
 
 @router.get("/{wid}", response_model=WarehouseResponse)
-def get_warehouse(wid: int, db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager, RoleEnum.client))):
+def get_warehouse(wid: int, db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager))):
     wh = db.query(Warehouse).filter(Warehouse.id == wid).first()
     if not wh: raise HTTPException(404, "Склад не найден")
     return wh

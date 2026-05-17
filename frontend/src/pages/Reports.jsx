@@ -51,11 +51,11 @@ export default function Reports() {
     fill: CHART_COLORS[idx % CHART_COLORS.length]
   }));
 
-  if (loading) return <div className="text-center py-5">⏳ Формирование отчетов...</div>;
+  if (loading) return <div className="text-center py-5">Формирование отчетов...</div>;
 
   return (
     <div className="container py-4">
-      <h2 className="fw-bold mb-4">📊 Отчеты и аналитика</h2>
+      <h2 className="fw-bold mb-4">Отчеты и аналитика</h2>
 
 
 
@@ -64,7 +64,7 @@ export default function Reports() {
         {/* ✅ 1. Детали с низким остатком (на основе таблицы) */}
         <div className="col-12">
           <div className="card shadow-sm border-danger">
-            <div className="card-header bg-danger text-white">⚠️ Детали с остатком ниже минимума</div>
+            <div className="card-header bg-danger text-white">Детали с остатком ниже минимума</div>
             <div className="card-body p-0">
               <table className="table table-sm mb-0">
                 <thead><tr><th>Название</th><th>На складе</th><th>Мин. остаток</th><th>Дефицит</th></tr></thead>
@@ -99,7 +99,7 @@ export default function Reports() {
               <input type="date" className="form-control" value={endDate} onChange={e => setEndDate(e.target.value)} />
             </div>
             <div className="col-md-6 text-end">
-              <button className="btn btn-outline-secondary" onClick={() => { setStartDate(''); setEndDate(''); }}>🔄 Сбросить период</button>
+              <button className="btn btn-outline-secondary" onClick={() => { setStartDate(''); setEndDate(''); }}>Сбросить период</button>
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function Reports() {
 
         <div className="col-md-6">
           <div className="card shadow-sm h-100">
-            <div className="card-header bg-success text-white">📊 Количество рейсов по месяцам</div>
+            <div className="card-header bg-success text-white">Количество рейсов по месяцам</div>
             <div className="card-body">
               {tripsByMonth.length === 0 ? (
                 <div className="alert alert-secondary text-center py-4 mb-0">Данных нет</div>
@@ -134,7 +134,7 @@ export default function Reports() {
         {/* ✅ 3. Месяцы по стоимости доставки (убывание) */}
         <div className="col-md-6">
           <div className="card shadow-sm h-100">
-            <div className="card-header bg-info text-white"> Месяцы по стоимости (убывание)</div>
+            <div className="card-header bg-info text-white">Месяцы по стоимости</div>
             <div className="card-body p-0">
               <table className="table table-sm mb-0">
                 <thead><tr><th>Месяц</th><th className="text-end">Сумма доставки</th></tr></thead>
@@ -143,7 +143,7 @@ export default function Reports() {
                     <tr><td colSpan="2" className="text-center text-muted py-3">Данных нет</td></tr>
                   ) : deliveryData.map((d, i) => (
                     <tr key={i}>
-                      <td>{d.month} мес.</td>
+                      <td>{d.month}</td>
                       <td className="text-end fw-bold">{d.total_delivery_cost?.toLocaleString() || 0} ₽</td>
                     </tr>
                   ))}
@@ -156,7 +156,7 @@ export default function Reports() {
         {/* ✅ 4. Топ заводов (Dashboard) */}
         <div className="col-md-6">
           <div className="card shadow-sm">
-            <div className="card-header bg-dark text-white">🏭 Топ-5 заводов по рейсам</div>
+            <div className="card-header bg-dark text-white">Топ-5 заводов по рейсам</div>
             <div className="card-body p-0">
               <table className="table table-sm mb-0">
                 <thead><tr><th>Завод</th><th className="text-end">Рейсов</th></tr></thead>
@@ -175,7 +175,7 @@ export default function Reports() {
         {/* ✅ 5. Водители по рейсам (убывание) */}
         <div className="col-md-6">
           <div className="card shadow-sm">
-            <div className="card-header bg-warning text-dark">👨‍✈️ Водители по количеству рейсов</div>
+            <div className="card-header bg-warning text-dark">Водители по количеству рейсов</div>
             <div className="card-body p-0">
               <table className="table table-sm mb-0">
                 <thead><tr><th>Водитель</th><th className="text-end">Рейсов</th></tr></thead>

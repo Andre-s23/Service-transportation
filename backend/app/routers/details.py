@@ -10,7 +10,7 @@ from app.dependencies import require_role, RoleEnum, Employee
 router = APIRouter(prefix="/details", tags=["Детали"])
 
 @router.get("/", response_model=list[DetailResponse])
-def list_details(search: str = Query(""), warehouse_id: int = Query(None), db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager, RoleEnum.client))):
+def list_details(search: str = Query(""), warehouse_id: int = Query(None), db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager))):
     q = db.query(Detail).join(Detail.warehouse).options(joinedload(Detail.warehouse))
     if search: q = q.filter(Detail.name.ilike(f"%{search}%"))
     if warehouse_id: q = q.filter(Detail.warehouse_id == warehouse_id)
@@ -25,7 +25,7 @@ def list_details(search: str = Query(""), warehouse_id: int = Query(None), db: S
 
 
 @router.get("/{did}", response_model=DetailResponse)
-def get_detail(did: int, db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager, RoleEnum.client))):
+def get_detail(did: int, db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager))):
     d = db.query(Detail).filter(Detail.id == did).first()
     if not d: raise HTTPException(404, "Деталь не найдена")
     return DetailResponse(**d.__dict__, warehouse_name=d.warehouse.name)

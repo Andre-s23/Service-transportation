@@ -9,14 +9,14 @@ from app.dependencies import require_role, RoleEnum, Employee
 router = APIRouter(prefix="/trailers", tags=["Прицепы"])
 
 @router.get("/", response_model=list[TrailerResponse])
-def list_trailers(search: str = Query(""), serviceable_only: bool = Query(False), db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager, RoleEnum.client))):
+def list_trailers(search: str = Query(""), serviceable_only: bool = Query(False), db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager))):
     q = db.query(Trailer)
     if search: q = q.filter(Trailer.brand.ilike(f"%{search}%") | Trailer.license_plate.ilike(f"%{search}%"))
     if serviceable_only: q = q.filter(Trailer.is_serviceable == True)
     return q.all()
 
 @router.get("/{tid}", response_model=TrailerResponse)
-def get_trailer(tid: int, db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager, RoleEnum.client))):
+def get_trailer(tid: int, db: Session = Depends(get_db), _: Employee = Depends(require_role(RoleEnum.admin, RoleEnum.manager))):
     t = db.query(Trailer).filter(Trailer.id == tid).first()
     if not t: raise HTTPException(404, "Прицеп не найден")
     return t

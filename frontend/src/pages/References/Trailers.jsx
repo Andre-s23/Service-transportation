@@ -3,10 +3,12 @@ import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Trailers() {
-  const [items, setItems] = useState([]);
+  const [items1, setItems1] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -18,12 +20,28 @@ export default function Trailers() {
       setLoading(true);
       try {
         const res = await api.get('/trailers/', { params: { search } });
-        setItems(res.data);
+        setItems1(res.data);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };
     fetch();
   }, [search]);
+
+  const items2 = [...items1].sort((a, b) => {
+    const nameA = a.brand?.toLowerCase() || '';
+    const nameB = b.brand?.toLowerCase() || '';
+    if (sortOrder === 'asc') {
+      return nameA.localeCompare(nameB, 'ru');
+    } else {
+      return nameB.localeCompare(nameA, 'ru');
+    }
+  });
+
+   const items = items2.filter(item2 => {
+    if (statusFilter === 'serviceable') return item2.is_serviceable === true;
+    if (statusFilter === 'broken') return item2.is_serviceable === false;
+    return true; // 'all' - показать все
+  });
 
   const handleOpenAdd = () => {
     setIsEditing(false);
@@ -45,7 +63,7 @@ export default function Trailers() {
       if (isEditing) await api.put(`/trailers/${formData.id}`, payload);
       else await api.post('/trailers/', payload);
       setShowModal(false);
-      setItems((await api.get('/trailers/', { params: { search } })).data);
+      setItems1((await api.get('/trailers/', { params: { search } })).data);
     } catch (err) { alert('Ошибка: ' + (err.response?.data?.detail || err.message)); }
     finally { setFormLoading(false); }
   };
@@ -54,7 +72,7 @@ export default function Trailers() {
     if (window.confirm('Удалить прицеп?')) {
       try {
         await api.delete(`/trailers/${id}`);
-        setItems(prev => prev.filter(i => i.id !== id));
+        setItems1(prev => prev.filter(i => i.id !== id));
       } catch (err) { alert('Не удалось удалить.'); }
     }
   };
@@ -66,6 +84,28 @@ export default function Trailers() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Прицепы</h3>
         <div className="d-flex gap-2">
+
+            <select
+            className="form-select"
+            style={{ maxWidth: '108px' }}
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value)}
+          >
+            <option value="asc">А → Я</option>
+            <option value="desc">Я → А</option>
+          </select>
+
+          <select
+            className="form-select"
+            style={{ maxWidth: '165px' }}
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            <option value="all"> Все прицепы</option>
+            <option value="serviceable">Исправны </option>
+            <option value="broken">На ремонте</option>
+          </select>
+
           <input type="text" className="form-control" placeholder="Поиск по марке или госномеру..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: '240px' }} />
           {isAdmin && <button className="btn btn-primary" onClick={handleOpenAdd}>+ Добавить прицеп</button>}
         </div>
@@ -112,7 +152,7 @@ export default function Trailers() {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">{isEditing ? '✏️ Редактировать прицеп' : '➕ Новый прицеп'}</h5>
+                <h5 className="modal-title">{isEditing ? 'Редактировать прицеп' : 'Новый прицеп'}</h5>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
               <form onSubmit={handleSave}>
@@ -123,7 +163,7 @@ export default function Trailers() {
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Госномер *</label>
-                    <input type="text" className="form-control text-uppercase" required value={formData.license_plate || ''} onChange={e => setFormData({...formData, license_plate: e.target.value.toUpperCase()})} placeholder="Т123УФ77" />
+                    <input type="text" className="form-control text-uppercase" required value={formData.license_plate || ''} onChange={e => setFormData({...formData, license_plate: e.target.value.toUpperCase()})} placeholder="ТТ123422" />
                   </div>
                   <div className="row g-3">
                     <div className="col-4">

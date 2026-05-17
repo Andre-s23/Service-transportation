@@ -4,13 +4,13 @@ import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
 export default function TransportList() {
-  const [transports, setTransports] = useState([]);
+  const [transports1, setTransports1] = useState([]);
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState(null); // 🔥 ID раскрытой строки
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
-
+  const [sortBy, setSortBy] = useState('date_desc');
   const canEdit = ['admin', 'manager'].includes(user?.role);
 
   const fetchTransports = async () => {
@@ -18,10 +18,10 @@ export default function TransportList() {
     try {
       const params = search ? { search } : {};
       const res = await api.get('/transports/', { params });
-      setTransports(Array.isArray(res.data) ? res.data : []);
+      setTransports1(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Ошибка загрузки:', err);
-      setTransports([]);
+      setTransports1([]);
     } finally {
       setLoading(false);
     }
@@ -29,13 +29,34 @@ export default function TransportList() {
 
   useEffect(() => { fetchTransports(); }, [search]);
 
+  const transports = [...transports1].sort((a, b) => {
+    if (sortBy === 'date_desc') {
+      // По дате начала (сначала новые)
+      return new Date(b.assign_date) - new Date(a.assign_date);
+    } else if (sortBy === 'date_asc') {
+      // По дате начала (сначала старые)
+      return new Date(a.assign_date) - new Date(b.assign_date);
+    } else if (sortBy === 'completion') {
+      // 🔥 Сначала без даты завершения, потом с датой (по убыванию)
+      if (!a.completion_date && b.completion_date) return -1;
+      if (a.completion_date && !b.completion_date) return 1;
+      if (!a.completion_date && !b.completion_date) {
+        // Оба без даты — сортируем по дате начала
+        return new Date(b.assign_date) - new Date(a.assign_date);
+      }
+      // Оба с датой — сортируем по дате завершения (сначала завершённые недавно)
+      return new Date(b.completion_date) - new Date(a.completion_date);
+    }
+    return 0;
+  });
+
   const handleDelete = async (id) => {
     if (!window.confirm('Удалить перевозку?')) return;
     try {
       await api.delete(`/transports/${id}`);
       fetchTransports();
     } catch (err) {
-      alert('Ошибка: ' + (err.response?.data?.detail || 'Не удалось удалить'));
+      alert('Ошибка: ' + (err.response?.data?.detail));
     }
   };
 
@@ -50,6 +71,16 @@ export default function TransportList() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Перевозки</h3>
         <div className="d-flex gap-2">
+            <select
+            className="form-select"
+            style={{ maxWidth: '220px' }}
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+          >
+            <option value="date_desc"> По дате (сначала новые)</option>
+            <option value="date_asc"> По дате (сначала старые)</option>
+            <option value="completion"> Сначала активные, потом завершённые</option>
+          </select>
 
         <input
           type="text"
