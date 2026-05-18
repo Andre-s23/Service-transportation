@@ -99,18 +99,6 @@ export default function Login() {
                 </button>
               </div>
 
-              {/* Декоративный разделитель */}
-              <div className="divider d-flex align-items-center my-4">
-                <p className="text-center fw-bold mx-3 mb-0 text-muted">Тестовые аккаунты</p>
-              </div>
-
-              {/* Подсказки для курсовой */}
-              <div className="small text-muted text-center">
-                <p className="mb-1"><strong>admin</strong> / admin123 — полный доступ</p>
-                <p className="mb-1"><strong>manager</strong> / manager123 — управление</p>
-                <p><strong>driver</strong> / driver123 — только свои рейсы</p>
-              </div>
-
             </form>
           </div>
 

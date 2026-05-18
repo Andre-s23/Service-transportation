@@ -19,7 +19,7 @@ import Trailers from './pages/References/Trailers';
 import Employees from './pages/Employees';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Компонент защиты роута (нужен ли он вам, решим позже, пока упростим)
+
 function PrivateRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="text-center py-5">Загрузка...</div>;
@@ -35,10 +35,8 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Публичный вход */}
           <Route path="/login" element={<Login />} />
 
-          {/* Layout с навбаром для всех защищённых страниц */}
           <Route element={<Layout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={
@@ -70,7 +68,11 @@ function App() {
               </PrivateRoute>
             } />
             {/* Добавьте сюда другие роуты по аналогии */}
-            <Route path="/plants" element={<PrivateRoute allowedRoles={['admin', 'manager', 'driver']}><Plants /></PrivateRoute>} />
+            <Route path="/plants" element={
+                <PrivateRoute allowedRoles={['admin', 'manager', 'driver']}>
+                    <Plants />
+                </PrivateRoute>
+            } />
             <Route path="/details" element={
               <PrivateRoute allowedRoles={['admin', 'manager']}>
                 <Details />
@@ -96,8 +98,6 @@ function App() {
                 <Employees />
               </PrivateRoute>
             } />
-
-
           </Route>
 
           {/* 404 */}

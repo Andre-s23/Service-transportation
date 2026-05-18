@@ -116,7 +116,7 @@ export default function Reports() {
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" label={{ value: 'Месяц', position: 'insideBottom', offset: -5 }} />
-                    <YAxis label={{ value: 'Рейсов', angle: -90, position: 'insideLeft' }} />
+                    <YAxis label={{ value: 'Рейсов', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
                     <Tooltip formatter={(value) => `${value.toLocaleString()}`} />
 
                     <Bar dataKey="trip_count" name="Рейсы">
