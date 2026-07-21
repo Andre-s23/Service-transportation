@@ -7,25 +7,17 @@ from app.dependencies import require_role, RoleEnum, Employee as CurrentEmployee
 from datetime import date
 from typing import Optional
 
+
 def check_vehicle_driver_conflict(db: Session, vehicle_id: int, driver_id: int,
                                   assign_date: date, completion_date: Optional[date],
                                   exclude_transport_id: Optional[int] = None) -> Optional[str]:
-    """
-    Проверяет пересечение дат для автомобиля и водителя.
-    Возвращает строку с ошибкой или None, если всё ок.
-    """
-    # Если дата завершения не указана — считаем рейс "бессрочным" или на 1 день
     end_date = completion_date or assign_date
 
-    # Базовый запрос: ищем рейсы с тем же авто ИЛИ тем же водителем
     q = db.query(Transportation).filter(
         ((Transportation.vehicle_id == vehicle_id) |
          (Transportation.driver_id == driver_id)),
-        # Исключаем текущую запись при редактировании
+
         (Transportation.id != exclude_transport_id) if exclude_transport_id else True,
-        # Проверка пересечения дат:
-        # Новый рейс пересекается со старым, если:
-        # новый_старт <= старый_конец AND новый_конец >= старый_старт
         Transportation.assign_date <= end_date,
         (Transportation.completion_date >= assign_date) | (Transportation.completion_date == None)
     )
@@ -47,13 +39,11 @@ def check_detail_min_quantity(db: Session, details_list) -> Optional[str]:
         detail = db.query(Detail).filter(Detail.id == item.detail_id).first()
         if not detail:
             return f"Деталь ID {item.detail_id} не найдена в справочнике"
-        if detail.current_stock-detail.min_stock <= 0:
+        if detail.current_stock - detail.min_stock <= 0:
             return f"Деталь «{detail.name}»: запасы меньше минимального остатка"
-        if item.quantity > detail.current_stock-detail.min_stock:
+        if item.quantity > detail.current_stock - detail.min_stock:
             return f"Деталь «{detail.name}»: недостаточное количество на складе"
     return None
-
-
 
 
 router = APIRouter(prefix="/transports", tags=["Транспортировки"])
@@ -63,7 +53,6 @@ router = APIRouter(prefix="/transports", tags=["Транспортировки"]
 def list_transports(search: str = Query(""),
                     db: Session = Depends(get_db),
                     current_user: Employee = Depends(get_current_user)):
-    # 🔥 Загружаем склад через цепочку: Transportation -> details -> detail -> warehouse
     q = db.query(Transportation).options(
         joinedload(Transportation.plant),
         joinedload(Transportation.vehicle),
@@ -94,7 +83,7 @@ def list_transports(search: str = Query(""),
                 "warehouse_name": wh.name if wh else None
             })
 
-        # Если нужен склад на уровне рейса (берём из первой детали)
+
         first_wh = details_list[0]["warehouse_name"] if details_list else None
 
         total_items = sum(d["quantity"] for d in details_list)
@@ -107,8 +96,8 @@ def list_transports(search: str = Query(""),
             trailer_plate=t.trailer.license_plate if t.trailer else None,
             driver_name=t.driver.full_name, total_items=total_items, total_cost=total_cost,
             details=details_list,
-            warehouse_name=first_wh,  # ← Заполняем из детали
-            warehouse_address=None,  # ← Добавьте адрес/телефон в схему Detail/Warehouse если нужно
+            warehouse_name=first_wh,
+            warehouse_address=None,
             warehouse_phone=None
         ))
     return result
@@ -159,17 +148,7 @@ def get_transport(tid: int, db: Session = Depends(get_db),
 @router.post("/", response_model=TransportationResponse, status_code=201)
 def create_transport(transport: TransportationCreate, db: Session = Depends(get_db),
                      _: CurrentEmployee = Depends(require_role(RoleEnum.admin, RoleEnum.manager))):
-    # # Проверка существования связанных записей
-    # for check_id, model, name in [
-    #     (transport.plant_id, "Plant", "Завод"),
-    #     (transport.vehicle_id, "Vehicle", "Автомобиль"),
-    #     (transport.driver_id, "Employee", "Водитель")
-    # ]:
-    #     if not db.query(eval(model)).filter(eval(model).id == check_id).first():
-    #         raise HTTPException(404, f"{name} не найден")
 
-    # if transport.trailer_id and not db.query("Trailer").filter(id=transport.trailer_id).first():
-    #     raise HTTPException(404, "Прицеп не найден")
 
     if not db.query(Plant).filter(Plant.id == transport.plant_id).first():
         raise HTTPException(404, "Завод не найден")
@@ -185,12 +164,11 @@ def create_transport(transport: TransportationCreate, db: Session = Depends(get_
         transport.assign_date, transport.completion_date
     )
     if conflict:
-        raise HTTPException(409, conflict)  # 409 = Conflict
+        raise HTTPException(409, conflict)
 
     stock_error = check_detail_min_quantity(db, transport.details)
     if stock_error:
         raise HTTPException(400, stock_error)
-
 
     new_t = Transportation(
         assign_date=transport.assign_date, completion_date=transport.completion_date,
@@ -229,29 +207,26 @@ def update_transport(tid: int, transport: TransportationUpdate, db: Session = De
             driver_id=getattr(transport, "driver_id", obj.driver_id),
             assign_date=getattr(transport, "assign_date", obj.assign_date),
             completion_date=getattr(transport, "completion_date", obj.completion_date),
-            exclude_transport_id=tid  # 🔥 Исключаем саму себя из проверки!
+            exclude_transport_id=tid
         )
         if conflict:
             raise HTTPException(409, conflict)
 
-        # 🔥 1. Обновляем ПРОСТЫЕ поля (исключаем details, т.к. это связь)
+
     for k, v in update_data.items():
-        if k != "details":  # 🔥 Пропускаем details здесь
+        if k != "details":
             setattr(obj, k, v)
     if "details" in update_data and transport.details is not None:
 
         stock_error = check_detail_min_quantity(db, transport.details)
         if stock_error:
             raise HTTPException(400, stock_error)
-        # Удаляем старые записи из связующей таблицы
 
         db.query(TransportationDetail).filter(
             TransportationDetail.transportation_id == obj.id
         ).delete()
 
-        # Добавляем новые
         for item in transport.details:
-            # Проверка существования детали
             if not db.query(Detail).filter(Detail.id == item.detail_id).first():
                 raise HTTPException(404, f"Деталь {item.detail_id} не найдена")
 
@@ -265,7 +240,6 @@ def update_transport(tid: int, transport: TransportationUpdate, db: Session = De
     db.commit()
     db.refresh(obj)
     return get_transport(obj.id, db, _)
-
 
 
 @router.delete("/{tid}")

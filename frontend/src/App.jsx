@@ -67,7 +67,7 @@ function App() {
                 <TransportForm />
               </PrivateRoute>
             } />
-            {/* Добавьте сюда другие роуты по аналогии */}
+
             <Route path="/plants" element={
                 <PrivateRoute allowedRoles={['admin', 'manager', 'driver']}>
                     <Plants />
@@ -100,7 +100,7 @@ function App() {
             } />
           </Route>
 
-          {/* 404 */}
+
           <Route path="*" element={<div className="text-center py-5">404 — Страница не найдена</div>} />
         </Routes>
       </BrowserRouter>

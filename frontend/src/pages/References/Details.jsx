@@ -1,4 +1,3 @@
-// src/pages/References/Details.jsx
 import { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -11,20 +10,19 @@ export default function Details() {
   const { user } = useAuth();
   const [sortOrder, setSortOrder] = useState('asc');
 
-  // Состояния модального окна
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [formLoading, setFormLoading] = useState(false);
 
-  // Загрузка данных
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const [detailsRes, warehousesRes] = await Promise.all([
           api.get('/details/', { params: { search } }),
-          api.get('/warehouses/') // Для выпадающего списка
+          api.get('/warehouses/')
         ]);
         setItems1(detailsRes.data);
         setWarehouses(warehousesRes.data);
@@ -48,7 +46,7 @@ export default function Details() {
     }
   });
 
-  // Открытие формы "Добавить"
+
   const handleOpenAdd = () => {
     setIsEditing(false);
     setFormData({
@@ -57,14 +55,14 @@ export default function Details() {
     setShowModal(true);
   };
 
-  // Открытие формы "Редактировать"
+
   const handleOpenEdit = (item) => {
     setIsEditing(true);
     setFormData({ ...item });
     setShowModal(true);
   };
 
-  // Сохранение
+
   const handleSave = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -76,7 +74,6 @@ export default function Details() {
         await api.post('/details/', payload);
       }
       setShowModal(false);
-      // Обновляем список без полной перезагрузки
       const res = await api.get('/details/', { params: { search } });
       setItems1(res.data);
     } catch (err) {
@@ -101,7 +98,7 @@ export default function Details() {
 
   return (
     <div className="container py-4">
-      {/* Шапка */}
+
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Детали</h3>
         <div className="d-flex gap-2">
@@ -123,7 +120,7 @@ export default function Details() {
         </div>
       </div>
 
-      {/* Таблица */}
+
       <div className="card shadow-sm">
         <div className="table-responsive">
           <table className="table table-hover align-middle mb-0">
@@ -160,7 +157,7 @@ export default function Details() {
         </div>
       </div>
 
-      {/* Модальное окно */}
+
       {showModal && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered">

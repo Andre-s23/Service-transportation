@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function TransportList() {
   const [transports1, setTransports1] = useState([]);
   const [search, setSearch] = useState('');
-  const [expandedId, setExpandedId] = useState(null); // 🔥 ID раскрытой строки
+  const [expandedId, setExpandedId] = useState(null);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -31,20 +31,16 @@ export default function TransportList() {
 
   const transports = [...transports1].sort((a, b) => {
     if (sortBy === 'date_desc') {
-      // По дате начала (сначала новые)
       return new Date(b.assign_date) - new Date(a.assign_date);
     } else if (sortBy === 'date_asc') {
-      // По дате начала (сначала старые)
       return new Date(a.assign_date) - new Date(b.assign_date);
     } else if (sortBy === 'completion') {
-      // 🔥 Сначала без даты завершения, потом с датой (по убыванию)
       if (!a.completion_date && b.completion_date) return -1;
       if (a.completion_date && !b.completion_date) return 1;
       if (!a.completion_date && !b.completion_date) {
-        // Оба без даты — сортируем по дате начала
         return new Date(b.assign_date) - new Date(a.assign_date);
       }
-      // Оба с датой — сортируем по дате завершения (сначала завершённые недавно)
+
       return new Date(b.completion_date) - new Date(a.completion_date);
     }
     return 0;
@@ -60,18 +56,17 @@ export default function TransportList() {
     }
   };
 
-  // 🔥 Переключение раскрытия строки
+
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
   return (
     <div className="container py-4">
-      {/* Шапка */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Перевозки</h3>
         <div className="d-flex gap-2">
-            <select
+          <select
             className="form-select"
             style={{ maxWidth: '220px' }}
             value={sortBy}
@@ -82,27 +77,23 @@ export default function TransportList() {
             <option value="completion"> Сначала активные, потом завершённые</option>
           </select>
 
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Поиск по госномеру авто..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ maxWidth: '240px' }}
-        />
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Поиск по госномеру авто..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ maxWidth: '240px' }}
+          />
 
-        {canEdit && (
-          <button className="btn btn-primary" onClick={() => navigate('/transports/new')}>
-            + Создать рейс
-          </button>
-        )}
+          {canEdit && (
+            <button className="btn btn-primary" onClick={() => navigate('/transports/new')}>
+              + Создать рейс
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Поиск */}
-
-
-      {/* Таблица */}
       <div className="card shadow-sm">
         <div className="table-responsive">
           <table className="table table-hover align-middle mb-0">
@@ -135,7 +126,7 @@ export default function TransportList() {
 
                   return (
                     <Fragment key={t.id}>
-                      {/* 🔹 Основная строка */}
+
                       <tr className={isExpanded ? 'table-primary' : ''}>
                         <td>
                           <button
@@ -161,46 +152,45 @@ export default function TransportList() {
                         )}
                       </tr>
 
-                      {/* 🔹 Раскрытая подробная информация */}
                       {isExpanded && (
-  <tr>
-    <td colSpan="9" className="bg-light p-3">
-      <h6 className="fw-bold mb-2">Состав груза</h6>
-      <div className="table-responsive">
-        <table className="table table-sm table-bordered mb-0 bg-white">
-          <thead className="table-light">
-            <tr>
-              <th>Деталь</th>
-              <th>Склад</th>
-              <th>Кол-во</th>
-              <th>Цена за ед.</th>
-              <th>Доставка</th>
-              <th>Сумма</th>
-            </tr>
-          </thead>
-          <tbody>
-            {details.map((d, idx) => (
-              <tr key={idx}>
-                <td>{d.detail_name || `ID: ${d.detail_id}`}</td>
-                <td><small className="text-muted">{d.warehouse_name || '—'}</small></td>
-                <td>{d.quantity} шт.</td>
-                <td>{d.base_price?.toLocaleString() || '0'} ₽</td>
-                <td>{d.shipping_cost?.toLocaleString() || '0'} ₽</td>
-                <td className="fw-bold">{(d.quantity * d.shipping_cost).toLocaleString()} ₽</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot className="table-light">
-            <tr>
-              <td colSpan="5" className="text-end fw-bold">Итого:</td>
-              <td className="fw-bold text-success">{deliveryCost.toLocaleString()} ₽</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </td>
-  </tr>
-)}
+                        <tr>
+                          <td colSpan="9" className="bg-light p-3">
+                            <h6 className="fw-bold mb-2">Состав груза</h6>
+                            <div className="table-responsive">
+                              <table className="table table-sm table-bordered mb-0 bg-white">
+                                <thead className="table-light">
+                                  <tr>
+                                    <th>Деталь</th>
+                                    <th>Склад</th>
+                                    <th>Кол-во</th>
+                                    <th>Цена за ед.</th>
+                                    <th>Доставка</th>
+                                    <th>Сумма</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {details.map((d, idx) => (
+                                    <tr key={idx}>
+                                      <td>{d.detail_name || `ID: ${d.detail_id}`}</td>
+                                      <td><small className="text-muted">{d.warehouse_name || '—'}</small></td>
+                                      <td>{d.quantity} шт.</td>
+                                      <td>{d.base_price?.toLocaleString() || '0'} ₽</td>
+                                      <td>{d.shipping_cost?.toLocaleString() || '0'} ₽</td>
+                                      <td className="fw-bold">{(d.quantity * d.shipping_cost).toLocaleString()} ₽</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                                <tfoot className="table-light">
+                                  <tr>
+                                    <td colSpan="5" className="text-end fw-bold">Итого:</td>
+                                    <td className="fw-bold text-success">{deliveryCost.toLocaleString()} ₽</td>
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                     </Fragment>
                   );
                 })

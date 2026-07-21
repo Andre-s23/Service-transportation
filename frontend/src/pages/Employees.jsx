@@ -14,7 +14,7 @@ export default function Employees() {
   const [formData, setFormData] = useState({});
   const [formLoading, setFormLoading] = useState(false);
 
-  // Загрузка списка
+
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
@@ -47,8 +47,6 @@ export default function Employees() {
     })
 
 
-
-  // Открытие формы
   const handleOpenAdd = () => {
     setFormData({
       full_name: '',
@@ -62,14 +60,10 @@ export default function Employees() {
     setShowModal(true);
   };
 
-  // Сохранение сотрудника
   const handleSave = async (e) => {
     e.preventDefault();
     setFormLoading(true);
     try {
-      // 🔥 Автогенерация логина/пароля (чтобы не показывать их в UI)
-      // В продакшене лучше генерировать на бэкенде, но для курсовой так проще
-
       const now = new Date();
       const suffix = `${now.getDate()}${now.getMonth() + 1}`;
       const tempLogin = formData.full_name
@@ -80,10 +74,9 @@ export default function Employees() {
       const payload = {
         ...formData,
         login: tempLogin,
-        password: 'temp123!', // Пароль сбрасывается при первом входе или задаётся админом отдельно
+        password: 'temp123!',
         birth_date: formData.birth_date || null,
         hire_date: formData.hire_date || null,
-        // Если не водитель — убираем поля ВУ, чтобы не ломать схему
         ...(formData.role === 'driver'
           ? { license_number: formData.license_number, driving_experience: Number(formData.driving_experience) || 0 }
           : {})
@@ -91,7 +84,6 @@ export default function Employees() {
 
       await api.post('/employees/', payload);
       setShowModal(false);
-      // Обновляем список
       const res = await api.get('/employees/', { params: { search } });
       setItems1(res.data);
     } catch (err) {
@@ -101,7 +93,6 @@ export default function Employees() {
     }
   };
 
-  // Удаление
   const handleDelete = async (id) => {
     if (window.confirm('Удалить сотрудника? Это действие нельзя отменить.')) {
       try {
@@ -113,22 +104,6 @@ export default function Employees() {
     }
   };
 
-  // Перевод ролей на русский
-//   const getRoleLabel = (role) => {
-//     const map = { admin: 'Администратор', manager: 'Менеджер', client: 'Заказчик', driver: 'Водитель' };
-//     return map[role] || role;
-//   };
-
-
-//   const getRoleConfig = (role) => {
-//     const map = {
-//       admin:   { label: 'Администратор', badge: 'bg-danger', icon: '👑' },
-//       manager: { label: 'Менеджер',      badge: 'bg-primary', icon: '💼' },
-//       driver:  { label: 'Водитель',      badge: 'bg-success', icon: '🚛' },
-//       client:  { label: 'Заказчик',      badge: 'bg-secondary', icon: '👤' }
-//     };
-//     return map[role] || { label: role, badge: 'bg-light text-dark', icon: '' };
-//   };
 
    const roleCounts = {
     all: items1.length,
@@ -139,7 +114,6 @@ export default function Employees() {
 
   return (
     <div className="container py-4">
-      {/* Шапка */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Сотрудники</h3>
         <div className="d-flex gap-2">
@@ -176,7 +150,6 @@ export default function Employees() {
         </div>
       </div>
 
-      {/* Таблица */}
       <div className="card shadow-sm">
         <div className="table-responsive">
           <table className="table table-hover align-middle mb-0">
@@ -218,7 +191,6 @@ export default function Employees() {
         </div>
       </div>
 
-      {/* Модальное окно регистрации */}
       {showModal && (
         <div className="modal fade show d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -265,7 +237,7 @@ export default function Employees() {
                     </div>
                   </div>
 
-                  {/* 🔥 Поля появляются только если выбран Водитель */}
+
                   {formData.role === 'driver' && (
                     <div className="card bg-light mt-3 p-3">
                       <h6 className="mb-2"> Данные водителя</h6>

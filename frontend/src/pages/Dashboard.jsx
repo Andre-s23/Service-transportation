@@ -7,7 +7,6 @@ export default function Dashboard() {
     const messages = {
       admin: ` Добро пожаловать, ${user.full_name}! У вас полный доступ ко всем функциям.`,
       manager: ` Добро пожаловать, ${user.full_name}! Вы можете управлять перевозками.`,
-//       client: ` Добро пожаловать! Вы можете просматривать свои перевозки.`,
       driver: ` Добро пожаловать, ${user.full_name}! Здесь ваши назначенные рейсы.`
     };
     return messages[user?.role];

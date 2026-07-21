@@ -9,13 +9,12 @@ export default function Warehouses() {
   const { user } = useAuth();
   const [sortOrder, setSortOrder] = useState('asc');
 
-  // Состояния модального окна
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [formLoading, setFormLoading] = useState(false);
 
-  // Загрузка данных
+
   useEffect(() => {
     const fetchItems = async () => {
       setLoading(true);
@@ -42,7 +41,7 @@ export default function Warehouses() {
     }
   });
 
-  // Открытие формы "Добавить"
+
   const handleOpenAdd = () => {
     setIsEditing(false);
     setFormData({
@@ -55,14 +54,14 @@ export default function Warehouses() {
     setShowModal(true);
   };
 
-  // Открытие формы "Редактировать"
+
   const handleOpenEdit = (item) => {
     setIsEditing(true);
     setFormData({ ...item });
     setShowModal(true);
   };
 
-  // Сохранение (Создание или Обновление)
+
   const handleSave = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -73,7 +72,6 @@ export default function Warehouses() {
         await api.post('/warehouses/', formData);
       }
       setShowModal(false);
-      // Обновляем список
       const res = await api.get('/warehouses/', { params: { search } });
       setItems1(res.data);
     } catch (err) {
@@ -83,7 +81,7 @@ export default function Warehouses() {
     }
   };
 
-  // Удаление
+
   const handleDelete = async (id) => {
     if (window.confirm('Удалить склад?')) {
       try {
@@ -99,7 +97,7 @@ export default function Warehouses() {
 
   return (
     <div className="container py-4">
-      {/* Шапка */}
+
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Склады</h3>
         <div className="d-flex gap-2">
@@ -130,7 +128,6 @@ export default function Warehouses() {
         </div>
       </div>
 
-      {/* Таблица */}
       <div className="card shadow-sm">
         <div className="table-responsive">
           <table className="table table-hover align-middle mb-0">
@@ -169,7 +166,6 @@ export default function Warehouses() {
         </div>
       </div>
 
-      {/* Модальное окно (Форма) */}
       {showModal && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered">

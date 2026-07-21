@@ -6,19 +6,17 @@ from app.models import (
 )
 from app.dependencies import get_password_hash
 
-# Создаём таблицы (безопасно: не пересоздаёт существующие)
+
 Base.metadata.create_all(bind=engine)
 db = SessionLocal()
 
 try:
-    # ============================================
-    # 1️⃣ СКЛАДЫ (3 примера)
-    # ============================================
+
     if db.query(Warehouse).count() < 6:
         warehouses = [
             Warehouse(
                 name="Центральный склад комплектующих",
-                region="Московская область",  # ✅ Область, не город!
+                region="Московская область",
                 address="г. Химки, ул. Заводская, 15",
                 phone="+74950001111",
                 manager_name="Петров А.А."
@@ -32,7 +30,7 @@ try:
             ),
             Warehouse(
                 name="Склад кузовных деталей",
-                region="Тверская область",  # ✅ Область
+                region="Тверская область",
                 address="г. Тверь, ул. Промышленная, 45",
                 phone="+74820003333",
                 manager_name="Козлов И.И."
@@ -40,15 +38,13 @@ try:
         ]
         db.add_all(warehouses)
         db.flush()
-        print("✅ Добавлено 3 склада")
+        print(" Добавлено 3 склада")
 
-    # ============================================
-    # 2️⃣ ЗАВОДЫ (3 примера)
-    # ============================================
+
     if db.query(Plant).count() < 6:
         plants = [
             Plant(
-                name='Завод "Двигательстроительный"',  # ✅ С кавычками
+                name='Завод "Двигательстроительный"',
                 region="Московская область",
                 address="г. Балашиха, ул. Заводская, 1",
                 phone="+74951112233",
@@ -74,30 +70,28 @@ try:
         ]
         db.add_all(plants)
         db.flush()
-        print("✅ Добавлено 3 завода")
+        print(" Добавлено 3 завода")
 
-    # ============================================
-    # 3️⃣ АВТОМОБИЛИ (3 примера)
-    # ============================================
+
     if db.query(Vehicle).count() < 6:
         vehicles = [
             Vehicle(
                 brand="КАМАЗ",
-                license_plate="А123БВ777",  # ✅ Московский регион (777)
+                license_plate="А123БВ777",
                 tonnage=10.0,
                 release_date=date(2020, 5, 15),
                 is_serviceable=True
             ),
             Vehicle(
                 brand="ГАЗель NEXT",
-                license_plate="В456ГД50",  # ✅ Московская область (50)
+                license_plate="В456ГД50",
                 tonnage=1.5,
                 release_date=date(2021, 8, 20),
                 is_serviceable=True
             ),
             Vehicle(
                 brand="MAN TGX",
-                license_plate="Е789ЖЗ69",  # ✅ Тверская область (69)
+                license_plate="Е789ЖЗ69",
                 tonnage=20.0,
                 release_date=date(2019, 3, 10),
                 is_serviceable=True
@@ -105,11 +99,9 @@ try:
         ]
         db.add_all(vehicles)
         db.flush()
-        print("✅ Добавлено 3 автомобиля")
+        print(" Добавлено 3 автомобиля")
 
-    # ============================================
-    # 4️⃣ ПРИЦЕПЫ (3 примера)
-    # ============================================
+
     if db.query(Trailer).count() < 6:
         trailers = [
             Trailer(brand="Schmitz", license_plate="Т111УФ77", tonnage=15.0, release_date=date(2021, 1, 10),
@@ -121,11 +113,9 @@ try:
         ]
         db.add_all(trailers)
         db.flush()
-        print("✅ Добавлено 3 прицепа")
+        print(" Добавлено 3 прицепа")
 
-    # ============================================
-    # 5️⃣ ДЕТАЛИ (3 примера) — привязываем к складу №1
-    # ============================================
+
     if db.query(Detail).count() < 6:
         wh1, wh2, wh3 = db.query(Warehouse).order_by(Warehouse.id).all()
         details = [
@@ -153,13 +143,11 @@ try:
         ]
         db.add_all(details)
         db.flush()
-        print("✅ Добавлено 3 детали")
+        print(" Добавлено 3 детали")
 
-    # ============================================
-    # 6️⃣ СОТРУДНИКИ (3 примера: admin, manager, driver)
-    # ============================================
+
     if db.query(Employee).filter(Employee.login == "admin").first() is None:
-        # Администратор
+
         admin = Employee(
             login="admin",
             password_hash=get_password_hash("admin123"),
@@ -172,7 +160,7 @@ try:
         db.add(admin);
         db.flush()
 
-        # Менеджер логистики
+
         manager = Employee(
             login="manager",
             password_hash=get_password_hash("manager123"),
@@ -185,7 +173,7 @@ try:
         db.add(manager);
         db.flush()
 
-        # Водитель-экспедитор
+
         driver_emp = Employee(
             login="driver",
             password_hash=get_password_hash("driver123"),
@@ -198,18 +186,16 @@ try:
         db.add(driver_emp);
         db.flush()
 
-        # Профиль водителя (1:1)
+
         db.add(Driver(
             employee_id=driver_emp.id,
             license_number="77УА123456",
             driving_experience=12
         ))
         db.flush()
-        print("✅ Добавлено 3 сотрудника и профиль водителя")
+        print(" Добавлено 3 сотрудника и профиль водителя")
 
-    # ============================================
-    # 7️⃣ ПЕРЕВОЗКИ (3 примера) с грузами (M:N)
-    # ============================================
+
     if db.query(Transportation).count() < 6:
         plant1, plant2, plant3 = db.query(Plant).order_by(Plant.id).all()
         veh1, veh2, veh3 = db.query(Vehicle).order_by(Vehicle.id).all()
@@ -217,7 +203,7 @@ try:
         driver = db.query(Employee).filter(Employee.login == "vai").first()
         d1, d2, d3 = db.query(Detail).order_by(Detail.id).all()
 
-        # 1️⃣ Активная перевозка (двигательные детали)
+
         t1 = Transportation(
             assign_date=date(2026, 5, 10),
             completion_date=None,  # В пути
@@ -233,7 +219,7 @@ try:
             TransportationDetail(transportation_id=t1.id, detail_id=d2.id, quantity=100, shipping_cost=80.00)
         ])
 
-        # 2️⃣ Завершённая перевозка (кузовные детали, без прицепа)
+
         t2 = Transportation(
             assign_date=date(2026, 5, 1),
             completion_date=date(2026, 5, 3),  # Доставлено
@@ -251,7 +237,7 @@ try:
             shipping_cost=300.00
         ))
 
-        # 3️⃣ Активная смешанная перевозка (сборный груз)
+
         t3 = Transportation(
             assign_date=date(2026, 5, 12),
             completion_date=None,
@@ -267,19 +253,16 @@ try:
             TransportationDetail(transportation_id=t3.id, detail_id=d2.id, quantity=60, shipping_cost=90.00),
             TransportationDetail(transportation_id=t3.id, detail_id=d3.id, quantity=10, shipping_cost=350.00)
         ])
-        print("✅ Добавлено 3 перевозки с грузами")
+        print(" Добавлено 3 перевозки с грузами")
 
-    # ✅ Фиксируем всё одним коммитом
+
     db.commit()
-    print("\n🎉 База данных успешно заполнена тестовыми данными!")
-    print("🔑 Данные для входа:")
-    print("   admin / admin123   — полный доступ")
-    print("   manager / manager123 — управление")
-    print("   driver / driver123  — только свои рейсы")
+    print("\n База данных успешно заполнена тестовыми данными!")
+
 
 except Exception as e:
     db.rollback()
-    print(f"❌ Ошибка при заполнении БД: {e}")
+    print(f" Ошибка при заполнении БД: {e}")
     raise
 finally:
     db.close()

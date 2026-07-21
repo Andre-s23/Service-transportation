@@ -38,7 +38,7 @@ export default function Layout() {
     setProfileLoading(true);
 
     try {
-    // 1. Валидация паролей
+
     if (profileForm.new_password) {
       if (profileForm.new_password !== profileForm.confirm_password) {
         throw new Error('Новые пароли не совпадают');
@@ -72,16 +72,16 @@ export default function Layout() {
         : null;
     }
 
-    // Пароли: только если меняем
+
     if (profileForm.new_password) {
       payload.old_password = profileForm.old_password;
       payload.new_password = profileForm.new_password;
     }
 
-    // 🔥 Отправляем запрос
+
     await api.put(`/employees/${user.id}`, payload);
 
-    // Обновляем UI
+
     if (setUser) {
       setUser(prev => ({
         ...prev,
@@ -95,7 +95,7 @@ export default function Layout() {
     alert('Профиль обновлен');
 
   } catch (err) {
-    // Показываем детальную ошибку от бэкенда
+
     const detail = err.response?.data?.detail;
     const errorMsg = detail
       ? (Array.isArray(detail)
@@ -111,7 +111,7 @@ export default function Layout() {
   };
 
 
-  // Меню в зависимости от роли
+
   const getMenuItems = () => {
     const items = [
       { label: 'Главная', path: '/dashboard' }
@@ -147,15 +147,10 @@ export default function Layout() {
 
   return (
     <div className="d-flex flex-column min-vh-100">
-      {/* НАВБАР */}
+
       <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div className="container-fluid">
-          {/* Логотип */}
-{/*           <Link className="navbar-brand fw-bold" to="/dashboard"> */}
-{/*              АвтоУчет */}
-{/*           </Link> */}
 
-          {/* Кнопка для мобильных устройств */}
           <button
             className="navbar-toggler"
             type="button"
@@ -168,7 +163,7 @@ export default function Layout() {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          {/* Меню */}
+
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               {menuItems.map((item) => (
@@ -180,7 +175,7 @@ export default function Layout() {
               ))}
             </ul>
 
-            {/* Правая часть */}
+
             <div className="d-flex align-items-center gap-3">
               <span
                 className="text-muted fw-medium"
@@ -200,12 +195,12 @@ export default function Layout() {
         </div>
       </nav>
 
-      {/* ОСНОВНОЙ КОНТЕНТ */}
+
       <main className="flex-grow-1 p-3">
         <Outlet />
       </main>
 
-      {/* ФУТЕР */}
+
       <footer className="bg-light text-center text-muted py-3 mt-auto">
         <div className="container">
           <small>© 2026 Система учета автоперевозок</small>
@@ -222,7 +217,7 @@ export default function Layout() {
 
               <form onSubmit={saveProfile}>
                 <div className="modal-body">
-                  {/* Основные данные */}
+
                   <div className="mb-3">
                     <label className="form-label">ФИО</label>
                     <input type="text" className="form-control" required

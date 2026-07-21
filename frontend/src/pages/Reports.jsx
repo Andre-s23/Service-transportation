@@ -16,7 +16,6 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
   const [tripsByMonth, setTripsByMonth] = useState([]);
 
-  // Загрузка данных при изменении периода
   const fetchData = async () => {
     setLoading(true);
     const params = {};
@@ -27,7 +26,7 @@ export default function Reports() {
       const [low, del, trips, plants, drivers] = await Promise.all([
         api.get('/reports/low-stock'),
         api.get('/reports/delivery-by-month', { params }),
-        api.get('/reports/trips-by-month', { params }),  // 🔥 Новый запрос
+        api.get('/reports/trips-by-month', { params }),
         api.get('/reports/dashboard'),
         api.get('/reports/top-drivers', { params })
       ]);
@@ -45,7 +44,6 @@ export default function Reports() {
 
   useEffect(() => { fetchData(); }, [startDate, endDate]);
 
-  // Подготовка данных для графика с чередованием цветов
   const chartData = tripsByMonth.map((item, idx) => ({
     ...item,
     fill: CHART_COLORS[idx % CHART_COLORS.length]
@@ -61,7 +59,6 @@ export default function Reports() {
 
       <div className="row g-4">
 
-        {/* ✅ 1. Детали с низким остатком (на основе таблицы) */}
         <div className="col-12">
           <div className="card shadow-sm border-danger">
             <div className="card-header bg-danger text-white">Детали с остатком ниже минимума</div>
@@ -85,25 +82,23 @@ export default function Reports() {
           </div>
         </div>
 
-
- {/* 🔹 Фильтр по периоду */}
-      <div className="card shadow-sm mb-4">
-        <div className="card-body">
-          <div className="row g-3 align-items-end">
-            <div className="col-md-3">
-              <label className="form-label">Дата с</label>
-              <input type="date" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Дата по</label>
-              <input type="date" className="form-control" value={endDate} onChange={e => setEndDate(e.target.value)} />
-            </div>
-            <div className="col-md-6 text-end">
-              <button className="btn btn-outline-secondary" onClick={() => { setStartDate(''); setEndDate(''); }}>Сбросить период</button>
+        <div className="card shadow-sm mb-4">
+          <div className="card-body">
+            <div className="row g-3 align-items-end">
+              <div className="col-md-3">
+                <label className="form-label">Дата с</label>
+                <input type="date" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">Дата по</label>
+                <input type="date" className="form-control" value={endDate} onChange={e => setEndDate(e.target.value)} />
+              </div>
+              <div className="col-md-6 text-end">
+                <button className="btn btn-outline-secondary" onClick={() => { setStartDate(''); setEndDate(''); }}>Сбросить период</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
         <div className="col-md-6">
           <div className="card shadow-sm h-100">
@@ -116,7 +111,7 @@ export default function Reports() {
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" label={{ value: 'Месяц', position: 'insideBottom', offset: -5 }} />
-                    <YAxis label={{ value: 'Рейсов', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
+                    <YAxis label={{ value: 'Рейсов', angle: -90, position: 'insideLeft' }} allowDecimals={false} />
                     <Tooltip formatter={(value) => `${value.toLocaleString()}`} />
 
                     <Bar dataKey="trip_count" name="Рейсы">
@@ -131,7 +126,6 @@ export default function Reports() {
           </div>
         </div>
 
-        {/* ✅ 3. Месяцы по стоимости доставки (убывание) */}
         <div className="col-md-6">
           <div className="card shadow-sm h-100">
             <div className="card-header bg-info text-white">Месяцы по стоимости</div>
@@ -153,7 +147,6 @@ export default function Reports() {
           </div>
         </div>
 
-        {/* ✅ 4. Топ заводов (Dashboard) */}
         <div className="col-md-6">
           <div className="card shadow-sm">
             <div className="card-header bg-dark text-white">Топ-5 заводов по рейсам</div>
@@ -172,7 +165,6 @@ export default function Reports() {
           </div>
         </div>
 
-        {/* ✅ 5. Водители по рейсам (убывание) */}
         <div className="col-md-6">
           <div className="card shadow-sm">
             <div className="card-header bg-warning text-dark">Водители по количеству рейсов</div>

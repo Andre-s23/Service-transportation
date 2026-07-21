@@ -41,7 +41,7 @@ export default function Vehicles() {
    const items = items2.filter(item2 => {
     if (statusFilter === 'serviceable') return item2.is_serviceable === true;
     if (statusFilter === 'broken') return item2.is_serviceable === false;
-    return true; // 'all' - показать все
+    return true;
   });
 
   const handleOpenAdd = () => {

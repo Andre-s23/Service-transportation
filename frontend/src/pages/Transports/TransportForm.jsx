@@ -1,4 +1,3 @@
-// src/pages/Transports/TransportForm.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
@@ -6,18 +5,18 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function TransportForm() {
   const navigate = useNavigate();
-  const { id } = useParams(); // Если есть ID в URL — значит, редактируем
+  const { id } = useParams();
   const { user } = useAuth();
   const isEdit = !!id;
 
-  // Справочники
+
   const [plants, setPlants] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [trailers, setTrailers] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [details, setDetails] = useState([]);
 
-  // Форма
+
   const [formData, setFormData] = useState({
     assign_date: new Date().toISOString().split('T')[0],
     completion_date: '',
@@ -28,7 +27,7 @@ export default function TransportForm() {
     details: []
   });
 
-  // Новая позиция груза
+
   const [newDetail, setNewDetail] = useState({ detail_id: '', quantity: 1, shipping_cost: 0 });
 
   const [loading, setLoading] = useState(false);
@@ -36,7 +35,7 @@ export default function TransportForm() {
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Загрузка справочников
+
   useEffect(() => {
     const loadRefs = async () => {
       try {
@@ -60,7 +59,7 @@ export default function TransportForm() {
     loadRefs();
   }, []);
 
-  // Загрузка данных для редактирования
+
   useEffect(() => {
     if (!isEdit) return;
     const loadTransport = async () => {
@@ -192,7 +191,6 @@ export default function TransportForm() {
           {error && <div className="alert alert-danger">{error}</div>}
           {success && <div className="alert alert-success">{success}</div>}
 
-          {/* Основные поля */}
           <div className="row g-3 mb-4">
             <div className="col-md-6">
               <label className="form-label">Дата назначения *</label>
@@ -234,7 +232,6 @@ export default function TransportForm() {
 
           <hr className="my-4" />
 
-          {/* Грузы */}
           <h5 className="mb-3">Добавить груз</h5>
           <div className="row g-2 align-items-end mb-3">
             <div className="col-md-5">
@@ -288,7 +285,6 @@ export default function TransportForm() {
             </div>
           )}
 
-          {/* Кнопки */}
           <div className="d-flex justify-content-end gap-2 mt-4">
             <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/transports')} disabled={submitting}>Отмена</button>
             <button type="submit" className="btn btn-primary px-4" disabled={submitting}>

@@ -9,13 +9,12 @@ export default function Plants() {
   const { user } = useAuth();
   const [sortOrder, setSortOrder] = useState('asc');
 
-  // 🔥 Состояния для модального окна (формы)
   const [showModal, setShowModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // Режим редактирования?
-  const [formData, setFormData] = useState({});      // Данные формы
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
   const [formLoading, setFormLoading] = useState(false);
 
-  // Загрузка списка
+
   const fetchItems = async () => {
     setLoading(true);
     try {
@@ -43,37 +42,34 @@ export default function Plants() {
 
 
 
-  // 🔥 Открытие формы "Добавить"
+
   const handleOpenAdd = () => {
     setIsEditing(false);
-    // Начальные пустые значения
     setFormData({
       name: '', region: '', address: '', phone: '', manager_name: '', workshop_count: 1
     });
     setShowModal(true);
   };
 
-  //  Открытие формы "Редактировать"
+
   const handleOpenEdit = (item) => {
     setIsEditing(true);
-    setFormData({ ...item }); // Копируем данные завода
+    setFormData({ ...item });
     setShowModal(true);
   };
 
-  // 🔥 Сохранение (Add или Edit)
+
   const handleSave = async (e) => {
     e.preventDefault();
     setFormLoading(true);
     try {
       if (isEditing) {
-        // Обновление существующего
         await api.put(`/plants/${formData.id}`, formData);
       } else {
-        // Создание нового
         await api.post('/plants/', formData);
       }
       setShowModal(false);
-      fetchItems(); // Обновляем список
+      fetchItems();
     } catch (err) {
       alert('Ошибка сохранения: ' + (err.response?.data?.detail || err.message));
     } finally {
@@ -92,12 +88,12 @@ export default function Plants() {
     }
   };
 
-  // Только админ может редактировать
+
   const isAdmin = user?.role === 'admin';
 
   return (
     <div className="container py-4">
-      {/* Заголовок и поиск */}
+
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold mb-0">Заводы</h3>
         <div className="d-flex gap-2">
@@ -117,7 +113,7 @@ export default function Plants() {
         </div>
       </div>
 
-      {/* Таблица */}
+
       <div className="card shadow-sm">
         <div className="table-responsive">
           <table className="table table-hover align-middle mb-0">
@@ -156,7 +152,7 @@ export default function Plants() {
         </div>
       </div>
 
-      {/* 🔥 МОДАЛЬНОЕ ОКНО (ФОРМА) */}
+
       {showModal && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered">

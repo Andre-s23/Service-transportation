@@ -30,7 +30,6 @@ export default function Login() {
       <div className="container py-5 h-100">
         <div className="row d-flex align-items-center justify-content-center h-100">
 
-          {/* Левая часть с картинкой */}
           <div className="col-md-8 col-lg-7 col-xl-6 d-none d-md-block">
             <img
               src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.svg"
@@ -40,14 +39,11 @@ export default function Login() {
             />
           </div>
 
-          {/* Правая часть с формой */}
           <div className="col-md-7 col-lg-5 col-xl-5 offset-xl-1">
             <form onSubmit={handleSubmit}>
 
-              {/* Заголовок */}
               <h3 className="fw-bold mb-4 text-center">Система учета автоперевозок</h3>
 
-              {/* Поле логина */}
               <div data-mdb-input-init className="form-outline mb-4">
                 <input
                   type="text"
@@ -61,7 +57,6 @@ export default function Login() {
                 <label className="form-label" htmlFor="loginInput">Логин</label>
               </div>
 
-              {/* Поле пароля */}
                <div data-mdb-input-init className="form-outline mb-4">
                 <input
                   type="password"
@@ -75,7 +70,6 @@ export default function Login() {
                 <label className="form-label" htmlFor="passwordInput">Пароль</label>
               </div>
 
-              {/* Сообщение об ошибке */}
               {error && (
                 <div className="alert alert-danger d-flex align-items-center" role="alert">
                   <i className="fas fa-exclamation-circle me-2"></i>
@@ -83,7 +77,6 @@ export default function Login() {
                 </div>
               )}
 
-              {/* Кнопка входа */}
               <div className="d-grid gap-2 mb-4">
                 <button
                   type="submit"

@@ -7,7 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Проверка сессии при загрузке
+
   useEffect(() => {
     api.get('/auth/me')
       .then(res => setUser(res.data))

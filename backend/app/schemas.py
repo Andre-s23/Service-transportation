@@ -7,7 +7,7 @@ from app.models import RoleEnum
 class LoginRequest(BaseModel):
     login: str
     password: str
-class UserCreate(BaseModel):  # пользователь
+class UserCreate(BaseModel):
     login: str
     password: str
     full_name: str
@@ -64,7 +64,7 @@ class DetailResponse(DetailBase):
 
 
 
-class PlantBase(BaseModel):    # деталь
+class PlantBase(BaseModel):
     name: str
     region: Optional[str] = None
     address: Optional[str] = None
@@ -210,7 +210,6 @@ class TransportationResponse(TransportationBase):
     total_items: int
     total_cost: float
 
-    # 🔥 Обязательно добавьте эти поля:
     details: List[TransportDetailItem] = []
     warehouse_name: Optional[str] = None
     warehouse_address: Optional[str] = None
